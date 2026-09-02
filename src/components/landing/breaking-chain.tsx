@@ -19,7 +19,7 @@ import {
 
 const LINK_COUNT = 17;
 const MID = Math.floor(LINK_COUNT / 2); // the weak link that snaps
-const SPACING = 40;
+const SPACING = 34;
 const HALF_SPAN = ((LINK_COUNT - 1) * SPACING) / 2;
 
 /** Wide oval link geometry. */
@@ -54,7 +54,7 @@ function ChainLink({ index, progress }: { index: number; progress: Progress }) {
       <ellipse
         cx={offset}
         cy={0}
-        rx={upright ? RY + 10 : RX}
+        rx={upright ? RY - 2 : RX}
         ry={upright ? RX - 2 : RY}
         fill="none"
         stroke="currentColor"
