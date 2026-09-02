@@ -6,7 +6,7 @@ export const siteConfig = {
   url: "https://beunbound.me",
   contactEmail: "beunbound.me@gmail.com",
   socials: {
-    youtube: "https://www.youtube.com/@become-unbound",
+    youtube: "https://youtube.com/@unbounding_",
     linkedin: "https://www.linkedin.com/company/become-unbound",
     instagram: "https://www.instagram.com/Unbound.x",
   },
