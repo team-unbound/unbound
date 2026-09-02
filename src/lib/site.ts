@@ -4,6 +4,8 @@ export const siteConfig = {
   description:
     "Unbound is a community for ambitious builders — students, young founders, and creators shipping the things they can't stop thinking about.",
   url: "https://beunbound.me",
+  /** Timezone event dates are displayed in. Change to your city, e.g. "America/Toronto". */
+  timeZone: "UTC",
   contactEmail: "beunbound.me@gmail.com",
   socials: {
     youtube: "https://youtube.com/@unbounding_",

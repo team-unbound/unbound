@@ -18,9 +18,6 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close the mobile sheet on navigation.
-  useEffect(() => setOpen(false), [pathname]);
-
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
@@ -86,6 +83,7 @@ export function SiteHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
+                  onClick={() => setOpen(false)}
                   className="block py-2 text-h3 text-fg-muted transition-colors hover:text-fg"
                 >
                   {link.label}
