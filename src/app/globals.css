@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   Unbound design system — strictly monochrome (black / white)
+   ============================================================ */
+@theme {
+  /* ---- Grayscale ramp (the only palette) ---- */
+  --color-ink-950: #050505;
+  --color-ink-900: #0a0a0a;
+  --color-ink-850: #0f0f0f;
+  --color-ink-800: #161616;
+  --color-ink-700: #212121;
+  --color-ink-600: #2e2e2e;
+  --color-ink-500: #454545;
+  --color-ink-400: #6b6b6b;
+  --color-ink-300: #949494;
+  --color-ink-200: #bdbdbd;
+  --color-ink-100: #e0e0e0;
+  --color-ink-50: #f4f4f4;
+
+  /* ---- Semantic aliases ---- */
+  --color-canvas: #050505;
+  --color-surface: #0f0f0f;
+  --color-surface-raised: #161616;
+  --color-line: #242424;
+  --color-line-strong: #3a3a3a;
+  --color-fg: #ffffff;
+  --color-fg-muted: #9a9a9a;
+  --color-fg-subtle: #6b6b6b;
+
+  /* ---- Type scale (fluid) ---- */
+  --text-display: clamp(3.25rem, 10.5vw, 9.5rem);
+  --text-display--line-height: 0.9;
+  --text-display--letter-spacing: -0.045em;
+  --text-display--font-weight: 500;
+
+  --text-h1: clamp(2.5rem, 6vw, 4.5rem);
+  --text-h1--line-height: 0.98;
+  --text-h1--letter-spacing: -0.035em;
+
+  --text-h2: clamp(1.875rem, 3.6vw, 2.75rem);
+  --text-h2--line-height: 1.06;
+  --text-h2--letter-spacing: -0.03em;
+
+  --text-h3: clamp(1.25rem, 2vw, 1.5rem);
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.02em;
+
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.65;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.6;
+
+  /* Uppercase eyebrow / label */
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.18em;
+  --text-label--font-weight: 500;
+
+  /* ---- Spacing rhythm ---- */
+  --spacing-gutter: 1.5rem;
+  --spacing-section: 7rem;
+  --spacing-section-lg: 10rem;
+
+  /* ---- Layout ---- */
+  --container-shell: 76rem;
+
+  /* ---- Motion ---- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-body);
+    line-height: 1.65;
+  }
+
+  ::selection {
+    background-color: var(--color-fg);
+    color: var(--color-canvas);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-fg);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Page shell: consistent max width + gutters */
+  .shell {
+    width: 100%;
+    max-width: var(--container-shell);
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  /* Uppercase eyebrow label with a leading rule */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: var(--text-label);
+    letter-spacing: var(--text-label--letter-spacing);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 2rem;
+    height: 1px;
+    background-color: var(--color-line-strong);
+  }
 }
