@@ -135,11 +135,10 @@ const CAMERA_FOV = 22;
  */
 const FIT_MARGIN = 1.18;
 /**
- * Ceiling on how far the camera may pull back to keep falling pieces framed.
- * Without it, gravity would shrink the chain to nothing; past this point
- * debris simply falls out of frame, which is what falling debris does.
+ * Vertical room reserved up front for the break, on top of the resting fit.
+ * Paid once in the static framing rather than by zooming out mid-animation.
  */
-const MAX_PULLBACK = 1.55;
+const BREAK_HEADROOM = 1.08;
 
 /* ------------------------------------------------------------------ */
 /* Break physics                                                       */
@@ -152,18 +151,25 @@ const FALL_SPAN = 0.7;
 /** Links further from the break let go later, as the slack runs out. */
 const STAGGER = 0.09;
 /** Uniform outward recoil of each half once the link parts. */
-const RECOIL = 1.5;
+const RECOIL = 2.3;
 /** Small upward flick at the moment of release, before gravity wins. */
-const KICK = 0.14;
-/** Downward acceleration applied as t², so pieces arc rather than fly flat. */
-const FALL = 1.55;
+const KICK = 0.07;
+/**
+ * Downward acceleration applied as t², so pieces arc rather than fly flat.
+ * Kept modest, and the tumble below is biased toward the X and Y axes:
+ * rotation about Z swings a link's long axis toward vertical and roughly
+ * doubles its silhouette height, which is what would push pieces through the
+ * top and bottom of a fixed frame. X and Y turn that length into depth
+ * instead, so pieces can tumble freely without growing vertically.
+ */
+const FALL = 0.22;
 /**
  * How far each half turns as it falls. Applied about the half's own centre of
  * mass, not its outer end: nothing anchors this chain, so a free fragment
  * rotates about its centroid. Pivoting at the end instead drags every link
  * toward that end as the angle opens up, folding the half into a bunch.
  */
-const SWING = 0.55;
+const SWING = 0.2;
 /** Centroid of one half's links, measured from the break. */
 const HALF_CENTROID = (SPACING * (LINKS_PER_SIDE + 1)) / 2;
 
@@ -425,12 +431,12 @@ export function ChainScene({
             dy * cos +
             KICK * bodyRecoil -
             FALL * bodyGravity +
-            link.phase * 0.18 * jitter;
+            link.phase * 0.1 * jitter;
           link.mesh.position.z = link.phase * 0.22 * bodyRecoil;
 
-          link.mesh.rotation.z = link.baseRotZ + swing + link.phase * 0.3 * jitter;
-          link.mesh.rotation.x = link.baseRotX + link.phase * 0.45 * jitter;
-          link.mesh.rotation.y = link.phase * 0.35 * (tl * tl);
+          link.mesh.rotation.z = link.baseRotZ + swing + link.phase * 0.1 * jitter;
+          link.mesh.rotation.x = link.baseRotX + link.phase * 1.5 * jitter;
+          link.mesh.rotation.y = link.phase * 1.1 * (tl * tl);
         }
 
         for (const half of breakHalves) {
@@ -463,15 +469,16 @@ export function ChainScene({
           half.mesh.position.z = 0.18 * bodyRecoil;
 
           half.mesh.rotation.z =
-            swing + half.side * (0.5 * strain + 1.2 * bodyTurn);
-          half.mesh.rotation.x = -ROLL + half.side * 1.0 * jitter;
-          half.mesh.rotation.y = half.side * 0.3 * (tl * tl);
+            swing + half.side * (0.5 * strain + 0.3 * bodyTurn);
+          half.mesh.rotation.x = -ROLL + half.side * 1.9 * jitter;
+          half.mesh.rotation.y = half.side * 0.9 * (tl * tl);
         }
       }
 
       const bounds = new THREE.Box3();
 
-      /** Half-width of the chain at rest, measured once from real geometry. */
+      // Rest pose measured once from real geometry — the camera is framed
+      // against this and nothing else.
       applyTransforms(0);
       group.updateMatrixWorld(true);
       bounds.setFromObject(group);
@@ -479,40 +486,32 @@ export function ChainScene({
         Math.abs(bounds.min.x),
         Math.abs(bounds.max.x),
       );
+      const restHalfHeight = Math.max(
+        Math.abs(bounds.min.y),
+        Math.abs(bounds.max.y),
+      );
+      const restMaxZ = bounds.max.z;
 
       /**
-       * Pulls the camera back far enough that the chain's *actual* bounding
-       * box fits the viewport — measured from the geometry rather than
-       * guessed from a constant. A rotating link's vertical footprint peaks
-       * near sqrt(halfLength² + halfHeight²), roughly 1.8x its resting
-       * height, which a fixed allowance underestimates; that overflow was
-       * what clipped the chain against the bottom edge mid-animation.
+       * Frames the chain once, against its resting bounds only.
        *
-       * Height is fitted to the live bounds so nothing is ever cut off.
-       * Width is fitted only to the resting width, so pieces are free to fly
-       * out past the left and right edges — leaving frame sideways reads as
-       * intended, being sliced off at the bottom does not.
+       * This deliberately does NOT track the live bounds. Refitting per frame
+       * meant that as the pieces flew apart the bounding box grew and the
+       * camera retreated to keep up, so the chain steadily shrank through the
+       * break — an apparent zoom-out nobody asked for, produced as a side
+       * effect of the motion. The frame is now constant for a given viewport,
+       * so apparent size is constant too; BREAK_HEADROOM reserves the extra
+       * vertical room the break needs up front instead of chasing it.
        */
       function fitCamera() {
-        group.updateMatrixWorld(true);
-        bounds.setFromObject(group);
-
-        const halfHeight =
-          Math.max(Math.abs(bounds.min.y), Math.abs(bounds.max.y)) * FIT_MARGIN;
+        const halfHeight = restHalfHeight * FIT_MARGIN * BREAK_HEADROOM;
         const halfWidth = restHalfWidth * FIT_MARGIN;
 
         const tanHalfFov = Math.tan((camera.fov * Math.PI) / 360);
         const forHeight = halfHeight / tanHalfFov;
         const forWidth = halfWidth / (tanHalfFov * camera.aspect);
 
-        // Measured from the frontmost geometry, since pieces travel toward
-        // the camera as they scatter. Capped so a long fall can't keep
-        // zooming out until the chain is a speck — past the cap the debris
-        // leaves frame instead, which is what falling debris should do.
-        camera.position.z = Math.min(
-          bounds.max.z + Math.max(forHeight, forWidth),
-          forWidth * MAX_PULLBACK,
-        );
+        camera.position.z = restMaxZ + Math.max(forHeight, forWidth);
         camera.updateProjectionMatrix();
       }
 
@@ -521,7 +520,6 @@ export function ChainScene({
       function render(p: number) {
         lastProgress = p;
         applyTransforms(p);
-        fitCamera();
         renderer.render(scene, camera);
       }
 
@@ -531,7 +529,8 @@ export function ChainScene({
         const height = Math.max(1, rect.height);
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
-        // Re-fit at the current scroll position, not a reset one.
+        // Framing depends on aspect, so it is recomputed here and only here.
+        fitCamera();
         render(lastProgress);
       }
 

@@ -82,7 +82,7 @@ export function Hero() {
           <ChainScene
             progress={progress}
             animate={!reduceMotion}
-            className="mx-auto h-[13vh] w-full max-w-4xl sm:h-[16vh] sm:[@media(min-height:840px)]:h-[20vh]"
+            className="h-[13vh] w-full sm:h-[16vh] sm:[@media(min-height:840px)]:h-[20vh]"
           />
         </div>
 
