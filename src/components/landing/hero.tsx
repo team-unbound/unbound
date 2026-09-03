@@ -39,7 +39,7 @@ export function Hero() {
     // The tall wrapper is the scroll runway; the inner panel pins while the chain breaks.
     <div ref={ref} className="relative h-[200vh]">
       <section className="sticky top-0 flex h-screen flex-col overflow-hidden">
-        <div className="shell flex flex-1 flex-col items-center justify-center pt-24 text-center">
+        <div className="shell flex min-h-0 flex-1 flex-col items-center justify-center pt-[10vh] text-center">
           <motion.div
             style={{ opacity: copyOpacity, y: copyY }}
             className="flex flex-col items-center"
@@ -75,11 +75,11 @@ export function Hero() {
         </div>
 
         {/* The chain sits in the lower band and snaps as you scroll. */}
-        <div className="relative w-full pb-16">
+        <div className="relative w-full shrink-0 pb-10">
           <ChainScene
             progress={progress}
             animate={!reduceMotion}
-            className="h-56 w-full sm:h-64 lg:h-80"
+            className="mx-auto h-[26vh] max-h-[360px] min-h-[150px] w-full max-w-4xl"
           />
         </div>
 

@@ -28,9 +28,16 @@ import { hasWebGL } from "@/lib/has-webgl";
  * highlight/shadow falloff under lighting.                            */
 /* ------------------------------------------------------------------ */
 
-const ARM_LENGTH = 0.62;
-const ARM_RADIUS = 0.42;
-const TUBE_RADIUS = 0.155;
+/*
+ * Proportioned like real chain stock: link roughly 2.2x as long as it is
+ * wide, on comparatively thin wire. The previous stubbier link plus a tight
+ * pitch made consecutive same-orientation links overlap by nearly half their
+ * length, fusing their straight sides into one continuous rail — it read as a
+ * rod with rings threaded onto it rather than as a chain.
+ */
+const ARM_LENGTH = 0.864;
+const ARM_RADIUS = 0.24;
+const TUBE_RADIUS = 0.12;
 const TUBULAR_SEGMENTS = 48;
 const RADIAL_SEGMENTS = 14;
 
@@ -90,10 +97,49 @@ function makeTube(startD: number, length: number, closed: boolean) {
 /* Chain layout                                                        */
 /* ------------------------------------------------------------------ */
 
-const LINK_COUNT = 17;
-const MID = Math.floor(LINK_COUNT / 2); // deliberately even -> faces the camera flat
-const SPACING = 0.46;
-const CHAIN_WIDTH = (LINK_COUNT - 1) * SPACING + ARM_LENGTH + 2 * ARM_RADIUS + 2 * TUBE_RADIUS;
+/** Three links either side of the break, plus the broken link between them. */
+const LINKS_PER_SIDE = 3;
+const LINK_COUNT = LINKS_PER_SIDE * 2 + 1;
+const MID = LINKS_PER_SIDE;
+/*
+ * Pitch. Must stay under the link's inner half-length
+ * (ARM_LENGTH / 2 + ARM_RADIUS - TUBE_RADIUS) or a link stops passing through
+ * its neighbour's opening and the chain comes apart; sitting just below that
+ * bound spreads the links as far as they can go while still interlocking.
+ */
+/*
+ * Chain pitch — the distance between consecutive links.
+ *
+ * Set to the link's centreline half-length, which is what actually makes a
+ * chain: each link's end cap lands at its neighbour's centre, so consecutive
+ * same-orientation links overlap by only twice the wire radius. Alternating
+ * links are rotated about the chain's own axis (X), keeping their long axis
+ * along the chain — rotating them about Y instead points the long axis across
+ * the chain, which never threads through the neighbouring link at all and
+ * forced a pitch tight enough to fuse the links into a solid rail.
+ */
+const SPACING = ARM_LENGTH / 2 + ARM_RADIUS;
+/** Half the chain's resting length, used to shape the arc below. */
+const HALF_SPAN = LINKS_PER_SIDE * SPACING;
+/**
+ * Gentle catenary sag, plus a small alternating roll per link.
+ *
+ * Interlocking links must overlap along the chain's axis, so a perfectly
+ * straight chain has every same-orientation link's straight sides collinear —
+ * their union becomes one unbroken rail and the whole thing reads as a rod
+ * with rings threaded on. Real chain never hangs that way. Breaking the
+ * collinearity is what makes it read as links.
+ */
+const SAG = 0.16;
+const ROLL = 0.07;
+
+const CAMERA_FOV = 22;
+/**
+ * How much slack to leave around the fitted bounds. Above ~1 this doubles as
+ * the anti-clipping headroom; well above it, it's what stops a short chain
+ * from filling the whole band and reading as a chunky close-up.
+ */
+const FIT_MARGIN = 1.35;
 
 /** Piecewise-linear interpolation with clamping, keyframe-style. */
 function mapRange(t: number, stops: [number, number][]): number {
@@ -110,12 +156,19 @@ function mapRange(t: number, stops: [number, number][]): number {
 
 type LinkHandle = {
   mesh: THREE.Mesh;
+  /** Resting pose along the arc, animation is layered on top of these. */
+  baseY: number;
+  baseRotZ: number;
+  baseRotX: number;
   /** -1 for links left of the break, +1 for links right of it. */
   side: number;
   /** 0 at the break, 1 at the chain's outer ends. */
   dist: number;
   baseX: number;
+  /** 0 = flat to camera, 1 = turned 90° — alternates to read as interlocked. */
   parity: number;
+  /** Which way this link drifts vertically as the chain comes apart. */
+  ySign: number;
 };
 
 type BreakHalfHandle = {
@@ -158,7 +211,7 @@ export function ChainScene({
     try {
       const scene = new THREE.Scene();
 
-      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+      const camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, 0.1, 200);
       camera.position.set(0, 0, 10);
 
       const renderer = new THREE.WebGLRenderer({
@@ -224,9 +277,24 @@ export function ChainScene({
 
       for (let i = 0; i < LINK_COUNT; i++) {
         const baseX = (i - MID) * SPACING;
-        const parity = i % 2;
+        // Parity is measured from the break, not from index 0, so the
+        // interlock pattern stays symmetric around it and the broken link
+        // itself sits flat to the camera where the split is most readable.
+        const parity = Math.abs(i - MID) % 2;
         const side = i < MID ? -1 : i > MID ? 1 : 0;
         const dist = Math.abs(i - MID) / MID;
+        const ySign = i % 2 === 0 ? -1 : 1;
+
+        // Shallow arc: lowest at the break, rising toward both ends.
+        const t = baseX / HALF_SPAN;
+        const baseY = -SAG * (1 - t * t);
+        // Tangent of that arc, so links sit along the curve rather than
+        // hanging off it at an angle.
+        const baseRotZ = Math.atan((2 * SAG * baseX) / (HALF_SPAN * HALF_SPAN));
+        // Alternating quarter turn about the chain's axis is what interlocks
+        // the links, plus a slight roll so the chain isn't machine-perfect.
+        const baseRotX =
+          (parity === 1 ? Math.PI / 2 : 0) + (i % 2 === 0 ? 1 : -1) * ROLL;
 
         if (i === MID) {
           // The break: two open half-tubes instead of one closed ring.
@@ -245,54 +313,42 @@ export function ChainScene({
 
         const mesh = new THREE.Mesh(closedGeometry, steel);
         mesh.position.x = baseX;
-        // Alternating orientation is what makes adjacent links read as
-        // interlocked rather than stacked flat.
-        if (parity === 1) mesh.rotation.y = Math.PI / 2;
         group.add(mesh);
-        links.push({ mesh, side, dist, baseX, parity });
+        links.push({
+          mesh,
+          side,
+          dist,
+          baseX,
+          parity,
+          ySign,
+          baseY,
+          baseRotZ,
+          baseRotX,
+        });
       }
 
-      const size = new THREE.Vector2();
-      function resize() {
-        const rect = container!.getBoundingClientRect();
-        const width = Math.max(1, rect.width);
-        const height = Math.max(1, rect.height);
-        renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-
-        // Fit the chain's world-space width into the viewport at any aspect.
-        const vFov = (camera.fov * Math.PI) / 180;
-        const margin = 1.3;
-        const desiredWidth = CHAIN_WIDTH * margin;
-        const distanceForWidth = desiredWidth / (2 * Math.tan(vFov / 2) * camera.aspect);
-        const distanceForHeight = ARM_RADIUS * 6 / (2 * Math.tan(vFov / 2));
-        camera.position.z = Math.max(distanceForWidth, distanceForHeight, 6);
-        camera.updateProjectionMatrix();
-
-        renderer.getSize(size);
-      }
-      resize();
-      resizeObserver = new ResizeObserver(resize);
-      resizeObserver.observe(container);
-
-      function render(p: number) {
+      /** Places every piece for a given scroll progress. */
+      function applyTransforms(p: number) {
         const ramp = mapRange(p, [
           [0, 0],
           [0.12, 0],
           [1, 1],
         ]);
 
+        group.rotation.x = -0.14;
         group.rotation.y = p * 0.18;
 
         for (const link of links) {
           const spin = link.side;
-          link.mesh.position.x =
-            link.baseX + spin * link.dist * 2.6 * ramp;
-          link.mesh.position.y =
-            (link.parity === 0 ? -1 : 1) * link.dist * 0.85 * ramp;
-          link.mesh.position.z = link.dist * 1.1 * ramp * (link.parity === 0 ? 1 : -1);
-          link.mesh.rotation.z = spin * (0.25 + link.dist * 2.1) * ramp;
-          link.mesh.rotation.x = link.dist * 0.5 * ramp * (link.parity === 0 ? 1 : -1);
+          link.mesh.position.x = link.baseX + spin * link.dist * 2.2 * ramp;
+          link.mesh.position.y = link.baseY + link.ySign * link.dist * 0.35 * ramp;
+          link.mesh.position.z =
+            link.dist * 0.5 * ramp * (link.parity === 0 ? 1 : -1);
+          link.mesh.rotation.z =
+            link.baseRotZ + spin * (0.3 + link.dist * 1.6) * ramp;
+          link.mesh.rotation.x =
+            link.baseRotX +
+            link.dist * 0.45 * ramp * (link.parity === 0 ? 1 : -1);
         }
 
         for (const half of breakHalves) {
@@ -305,16 +361,77 @@ export function ChainScene({
             [0.3, 0],
             [1, 1],
           ]);
-          half.mesh.rotation.z = half.side * (0.55 * hinge + 2.1 * fly);
-          half.mesh.position.x = half.side * (0.35 * hinge + 2.3 * fly);
-          half.mesh.position.y = half.side * (-0.12 * hinge - 0.7 * fly);
-          half.mesh.position.z = 0.15 * hinge + 0.5 * fly;
+          half.mesh.rotation.z = half.side * (0.55 * hinge + 1.7 * fly);
+          half.mesh.position.x = half.side * (0.35 * hinge + 2.0 * fly);
+          half.mesh.position.y = -SAG + half.side * (-0.12 * hinge - 0.3 * fly);
+          half.mesh.position.z = 0.15 * hinge + 0.35 * fly;
         }
+      }
 
+      const bounds = new THREE.Box3();
+
+      /** Half-width of the chain at rest, measured once from real geometry. */
+      applyTransforms(0);
+      group.updateMatrixWorld(true);
+      bounds.setFromObject(group);
+      const restHalfWidth = Math.max(
+        Math.abs(bounds.min.x),
+        Math.abs(bounds.max.x),
+      );
+
+      /**
+       * Pulls the camera back far enough that the chain's *actual* bounding
+       * box fits the viewport — measured from the geometry rather than
+       * guessed from a constant. A rotating link's vertical footprint peaks
+       * near sqrt(halfLength² + halfHeight²), roughly 1.8x its resting
+       * height, which a fixed allowance underestimates; that overflow was
+       * what clipped the chain against the bottom edge mid-animation.
+       *
+       * Height is fitted to the live bounds so nothing is ever cut off.
+       * Width is fitted only to the resting width, so pieces are free to fly
+       * out past the left and right edges — leaving frame sideways reads as
+       * intended, being sliced off at the bottom does not.
+       */
+      function fitCamera() {
+        group.updateMatrixWorld(true);
+        bounds.setFromObject(group);
+
+        const halfHeight =
+          Math.max(Math.abs(bounds.min.y), Math.abs(bounds.max.y)) * FIT_MARGIN;
+        const halfWidth = restHalfWidth * FIT_MARGIN;
+
+        const tanHalfFov = Math.tan((camera.fov * Math.PI) / 360);
+        const forHeight = halfHeight / tanHalfFov;
+        const forWidth = halfWidth / (tanHalfFov * camera.aspect);
+
+        // Measured from the frontmost geometry, since pieces travel toward
+        // the camera as they scatter.
+        camera.position.z = bounds.max.z + Math.max(forHeight, forWidth);
+        camera.updateProjectionMatrix();
+      }
+
+      let lastProgress = animate ? progress.get() : 0;
+
+      function render(p: number) {
+        lastProgress = p;
+        applyTransforms(p);
+        fitCamera();
         renderer.render(scene, camera);
       }
 
-      render(animate ? progress.get() : 0);
+      function resize() {
+        const rect = container!.getBoundingClientRect();
+        const width = Math.max(1, rect.width);
+        const height = Math.max(1, rect.height);
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        // Re-fit at the current scroll position, not a reset one.
+        render(lastProgress);
+      }
+
+      resize();
+      resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(container);
 
       if (animate) {
         unsubscribe = progress.on("change", (v) => {
