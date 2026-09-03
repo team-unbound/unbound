@@ -14,6 +14,11 @@ const socials = [
   },
 ];
 
+const legalLinks = [
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+];
+
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-line">
@@ -75,12 +80,26 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-2 border-t border-line pt-6 text-body-sm text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-14 flex flex-col gap-4 border-t border-line pt-6 text-body-sm text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
           <p>
             &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
             reserved.
           </p>
-          <p>Built by builders.</p>
+          <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            {legalLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="transition-colors hover:text-fg"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <li aria-hidden="true" className="hidden sm:block">
+              Built by builders.
+            </li>
+          </ul>
         </div>
       </div>
     </footer>
