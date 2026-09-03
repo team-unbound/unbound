@@ -2,16 +2,8 @@
 
 import { useState } from "react";
 import type { CommunityProfile } from "@/db/community";
+import { initialsOf } from "@/lib/format";
 import { PairingRequestForm } from "./pairing-request-form";
-
-function initialsOf(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 /** Status line shown instead of the request button, per relationship. */
 const relationLabel: Record<string, string> = {

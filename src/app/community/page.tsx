@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BlurredProfileCard } from "@/components/community/blurred-profile-card";
 import { ProfileCard } from "@/components/community/profile-card";
+import { PublicProfileCard } from "@/components/community/public-profile-card";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
-import { getCommunityProfiles } from "@/db/community";
-import { requireProfile } from "@/lib/auth";
+import {
+  getCommunityProfiles,
+  getPublicCommunityPreview,
+} from "@/db/community";
+import { getCurrentProfile, getUserId } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Community",
   description: "The people building inside Unbound.",
 };
 
-export default async function CommunityPage() {
-  // Redirects to sign-in, or to onboarding if the profile isn't finished.
-  const viewer = await requireProfile();
-  const members = await getCommunityProfiles(viewer.id);
+const PREVIEW_LIMIT = 5;
+const MAX_PLACEHOLDER_CARDS = 6;
+
+async function SignedInCommunity({ profileId }: { profileId: string }) {
+  const members = await getCommunityProfiles(profileId);
 
   return (
-    <Section className="pt-40 lg:pt-48">
+    <>
       <Reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="max-w-xl">
           <span className="eyebrow">Community</span>
@@ -59,6 +65,107 @@ export default async function CommunityPage() {
             onboarding.
           </p>
         </div>
+      )}
+    </>
+  );
+}
+
+async function PublicCommunityPreview({
+  ctaHref = "/sign-in",
+  ctaLabel = "Sign in / Sign up",
+}: {
+  ctaHref?: string;
+  ctaLabel?: string;
+}) {
+  const { visible, totalCount } = await getPublicCommunityPreview(PREVIEW_LIMIT);
+  const hiddenCount = Math.max(0, totalCount - visible.length);
+  const placeholderCount = Math.min(hiddenCount, MAX_PLACEHOLDER_CARDS);
+
+  return (
+    <>
+      <Reveal className="max-w-xl">
+        <span className="eyebrow">Community</span>
+        <h1 className="mt-8 text-h1 font-medium text-balance">
+          The people building inside Unbound.
+        </h1>
+        <p className="mt-6 text-body-lg text-fg-muted text-pretty">
+          A preview of who&rsquo;s here. Sign in to see everyone and send
+          pairing requests.
+        </p>
+      </Reveal>
+
+      {visible.length > 0 ? (
+        <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          {visible.map((member, i) => (
+            <Reveal
+              key={member.id}
+              delay={Math.min(i, 6) * 0.05}
+              className="bg-canvas"
+            >
+              <PublicProfileCard profile={member} />
+            </Reveal>
+          ))}
+
+          {Array.from({ length: placeholderCount }).map((_, i) => (
+            <BlurredProfileCard key={`placeholder-${i}`} variant={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-16 rounded-2xl border border-dashed border-line p-10 text-center">
+          <p className="text-body-sm text-fg-muted">
+            No profiles yet. Be the first to join.
+          </p>
+        </div>
+      )}
+
+      {hiddenCount > 0 ? (
+        <Reveal className="mt-14 flex flex-col items-center gap-4 rounded-2xl border border-line bg-surface p-10 text-center">
+          <p className="max-w-sm text-body-lg text-fg-muted text-pretty">
+            {hiddenCount === 1
+              ? "There's one more builder in Unbound."
+              : `There are ${hiddenCount} more builders in Unbound.`}
+          </p>
+          <Link
+            href={ctaHref}
+            className="rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85"
+          >
+            {ctaHref === "/sign-in" ? "Want to see it all? " : ""}
+            {ctaLabel}
+          </Link>
+        </Reveal>
+      ) : (
+        <Reveal className="mt-14 flex flex-col items-center gap-4 rounded-2xl border border-line bg-surface p-10 text-center">
+          <p className="max-w-sm text-body-lg text-fg-muted text-pretty">
+            Join to send pairing requests and show up on this page yourself.
+          </p>
+          <Link
+            href={ctaHref}
+            className="rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85"
+          >
+            {ctaLabel}
+          </Link>
+        </Reveal>
+      )}
+    </>
+  );
+}
+
+export default async function CommunityPage() {
+  const userId = await getUserId();
+  const profile = userId ? await getCurrentProfile() : null;
+
+  return (
+    <Section className="pt-40 lg:pt-48">
+      {profile?.onboardedAt ? (
+        <SignedInCommunity profileId={profile.id} />
+      ) : userId ? (
+        // Signed in, but hasn't finished onboarding yet.
+        <PublicCommunityPreview
+          ctaHref="/onboarding"
+          ctaLabel="Finish your profile to see everyone"
+        />
+      ) : (
+        <PublicCommunityPreview />
       )}
     </Section>
   );

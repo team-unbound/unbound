@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb } from "./index";
 import { pairingRequests, profiles } from "./schema";
@@ -103,6 +103,33 @@ export async function getCommunityProfiles(
         ? "self"
         : (relationByProfile.get(row.id) ?? "none"),
   }));
+}
+
+/**
+ * Public, unauthenticated preview: exactly `limit` real profiles plus a total
+ * count. No relation data (there's no viewer to relate anything to), and
+ * callers must not fetch more than `limit` rows worth of member data for
+ * anonymous visitors — the rest of the grid is placeholder-only, client side.
+ */
+export async function getPublicCommunityPreview(
+  limit = 5,
+): Promise<{ visible: PublicProfile[]; totalCount: number }> {
+  const db = getDb();
+
+  const [visible, [{ totalCount }]] = await Promise.all([
+    db
+      .select(publicProfileColumns)
+      .from(profiles)
+      .where(isNotNull(profiles.onboardedAt))
+      .orderBy(desc(profiles.onboardedAt))
+      .limit(limit),
+    db
+      .select({ totalCount: count() })
+      .from(profiles)
+      .where(isNotNull(profiles.onboardedAt)),
+  ]);
+
+  return { visible, totalCount };
 }
 
 /** A single member's public card, or null. */

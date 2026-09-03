@@ -29,3 +29,13 @@ export function formatEventTime(date: Date) {
 export function toDateTimeAttr(date: Date) {
   return date.toISOString();
 }
+
+/** "Raisa Farhin" -> "RF" */
+export function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
