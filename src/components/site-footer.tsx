@@ -2,11 +2,16 @@ import Link from "next/link";
 import { Logo } from "./logo";
 import { navLinks, siteConfig } from "@/lib/site";
 import { InstagramIcon, LinkedInIcon, MailIcon, YouTubeIcon } from "./icons";
+import { CopyEmailButton } from "./ui/copy-email-button";
 
 const socials = [
   { href: siteConfig.socials.youtube, label: "YouTube", Icon: YouTubeIcon },
   { href: siteConfig.socials.linkedin, label: "LinkedIn", Icon: LinkedInIcon },
-  { href: siteConfig.socials.instagram, label: "Instagram", Icon: InstagramIcon },
+  {
+    href: siteConfig.socials.instagram,
+    label: "Instagram",
+    Icon: InstagramIcon,
+  },
 ];
 
 export function SiteFooter() {
@@ -19,13 +24,13 @@ export function SiteFooter() {
             <p className="mt-5 text-body-sm text-fg-muted text-pretty">
               {siteConfig.description}
             </p>
-            <a
-              href={`mailto:${siteConfig.contactEmail}`}
+            <CopyEmailButton
+              email={siteConfig.contactEmail}
               className="mt-6 inline-flex items-center gap-2 text-body-sm text-fg-muted underline-offset-4 transition-colors hover:text-fg hover:underline"
             >
               <MailIcon className="h-4 w-4" />
               {siteConfig.contactEmail}
-            </a>
+            </CopyEmailButton>
           </div>
 
           <div className="flex flex-col gap-10 sm:flex-row sm:gap-20">

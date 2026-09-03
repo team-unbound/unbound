@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CopyEmailButton } from "@/components/ui/copy-email-button";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { team } from "@/lib/team";
@@ -19,7 +20,7 @@ export default function TeamPage() {
             Built by people doing the same thing you are.
           </h1>
           <p className="mt-6 max-w-xl text-body-lg text-fg-muted text-pretty">
-            We run Unbound around our own studying and building — which is
+            We run Unbound around our own studying and building, which is
             exactly why we know what it&rsquo;s missing.
           </p>
         </Reveal>
@@ -37,18 +38,28 @@ export default function TeamPage() {
 
                 <h2 className="mt-6 text-h3 font-medium">{member.name}</h2>
                 <p className="mt-1 text-body-sm text-fg-muted">{member.role}</p>
-
-                <a
-                  href={member.mailto}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full border border-line-strong px-5 py-2 text-body-sm transition-colors hover:border-fg"
-                >
-                  Email us
-                  <span aria-hidden="true">&rarr;</span>
-                </a>
               </article>
             </Reveal>
           ))}
         </div>
+
+        {/* One inbox for all three of us, so one button under the row rather
+            than the same address repeated on every card. */}
+        <Reveal className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <CopyEmailButton
+            email={siteConfig.contactEmail}
+            className="rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85"
+          >
+            Email us
+          </CopyEmailButton>
+          <p className="text-body-sm text-fg-subtle">
+            Copies{" "}
+            <span className="font-mono text-fg-muted">
+              {siteConfig.contactEmail}
+            </span>{" "}
+            to your clipboard.
+          </p>
+        </Reveal>
       </Section>
 
       <Section className="border-t border-line">
@@ -59,15 +70,16 @@ export default function TeamPage() {
             </h2>
             <p className="mt-3 max-w-lg text-body-lg text-fg-muted text-pretty">
               We&rsquo;re always looking for people to host events, write, or
-              build the product with us.
+              build the product with us. Send us a note about what you&rsquo;d
+              want to take on.
             </p>
           </div>
-          <a
-            href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("I'd like to help run unbound.")}`}
-            className="shrink-0 rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85"
+          <CopyEmailButton
+            email={siteConfig.contactEmail}
+            className="shrink-0 rounded-full border border-line-strong px-7 py-3 text-body-sm font-medium transition-colors hover:border-fg"
           >
-            Get in touch
-          </a>
+            Copy our email
+          </CopyEmailButton>
         </Reveal>
       </Section>
     </>

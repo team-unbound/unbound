@@ -6,6 +6,7 @@ import { Section } from "@/components/ui/section";
 import { getSplitEvents } from "@/db/queries";
 import type { UnboundEvent } from "@/db/schema";
 import { siteConfig } from "@/lib/site";
+import { CopyEmailButton } from "@/components/ui/copy-email-button";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -96,13 +97,13 @@ export default async function EventsPage() {
           <EventGrid events={previous} past />
         ) : (
           <EmptyState>
-            No past events yet — we&rsquo;re just getting started.{" "}
-            <a
-              href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("Event idea for unbound")}`}
+            No past events yet, we&rsquo;re just getting started.{" "}
+            <CopyEmailButton
+              email={siteConfig.contactEmail}
               className="text-fg underline underline-offset-4"
             >
               Pitch us one
-            </a>
+            </CopyEmailButton>
             .
           </EmptyState>
         )}
