@@ -102,12 +102,6 @@ const LINKS_PER_SIDE = 3;
 const LINK_COUNT = LINKS_PER_SIDE * 2 + 1;
 const MID = LINKS_PER_SIDE;
 /*
- * Pitch. Must stay under the link's inner half-length
- * (ARM_LENGTH / 2 + ARM_RADIUS - TUBE_RADIUS) or a link stops passing through
- * its neighbour's opening and the chain comes apart; sitting just below that
- * bound spreads the links as far as they can go while still interlocking.
- */
-/*
  * Chain pitch — the distance between consecutive links.
  *
  * Set to the link's centreline half-length, which is what actually makes a
@@ -139,19 +133,52 @@ const CAMERA_FOV = 22;
  * the anti-clipping headroom; well above it, it's what stops a short chain
  * from filling the whole band and reading as a chunky close-up.
  */
-const FIT_MARGIN = 1.35;
+const FIT_MARGIN = 1.18;
+/**
+ * Ceiling on how far the camera may pull back to keep falling pieces framed.
+ * Without it, gravity would shrink the chain to nothing; past this point
+ * debris simply falls out of frame, which is what falling debris does.
+ */
+const MAX_PULLBACK = 1.55;
 
-/** Piecewise-linear interpolation with clamping, keyframe-style. */
-function mapRange(t: number, stops: [number, number][]): number {
-  if (t <= stops[0][0]) return stops[0][1];
-  const last = stops[stops.length - 1];
-  if (t >= last[0]) return last[1];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const [t0, v0] = stops[i];
-    const [t1, v1] = stops[i + 1];
-    if (t >= t0 && t <= t1) return v0 + ((t - t0) / (t1 - t0)) * (v1 - v0);
-  }
-  return last[1];
+/* ------------------------------------------------------------------ */
+/* Break physics                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Scroll position where the strained link finally lets go. */
+const SNAP_AT = 0.2;
+/** How much scroll the fall plays out over after the snap. */
+const FALL_SPAN = 0.7;
+/** Links further from the break let go later, as the slack runs out. */
+const STAGGER = 0.09;
+/** Uniform outward recoil of each half once the link parts. */
+const RECOIL = 1.5;
+/** Small upward flick at the moment of release, before gravity wins. */
+const KICK = 0.14;
+/** Downward acceleration applied as t², so pieces arc rather than fly flat. */
+const FALL = 1.55;
+/**
+ * How far each half turns as it falls. Applied about the half's own centre of
+ * mass, not its outer end: nothing anchors this chain, so a free fragment
+ * rotates about its centroid. Pivoting at the end instead drags every link
+ * toward that end as the angle opens up, folding the half into a bunch.
+ */
+const SWING = 0.55;
+/** Centroid of one half's links, measured from the break. */
+const HALF_CENTROID = (SPACING * (LINKS_PER_SIDE + 1)) / 2;
+
+function clamp01(v: number) {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+/** Fast initial movement, decelerating — recoil bleeding off. */
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function smoothstep(t: number) {
+  const c = clamp01(t);
+  return c * c * (3 - 2 * c);
 }
 
 type LinkHandle = {
@@ -169,6 +196,10 @@ type LinkHandle = {
   parity: number;
   /** Which way this link drifts vertically as the chain comes apart. */
   ySign: number;
+  /** Deterministic per-link variation so pieces don't tumble in unison. */
+  phase: number;
+  /** Extra delay before this link lets go, measured from the break outward. */
+  release: number;
 };
 
 type BreakHalfHandle = {
@@ -295,6 +326,10 @@ export function ChainScene({
         // the links, plus a slight roll so the chain isn't machine-perfect.
         const baseRotX =
           (parity === 1 ? Math.PI / 2 : 0) + (i % 2 === 0 ? 1 : -1) * ROLL;
+        // Deterministic spread of tumble rates, and a release delay that
+        // travels outward from the break as the slack runs out.
+        const phase = (((i * 7) % 5) / 4 - 0.5) * 2;
+        const release = dist * STAGGER;
 
         if (i === MID) {
           // The break: two open half-tubes instead of one closed ring.
@@ -305,6 +340,7 @@ export function ChainScene({
               half === 1 ? rightHalfGeometry : leftHalfGeometry,
               steel,
             );
+            mesh.rotation.order = "ZYX";
             group.add(mesh);
             breakHalves.push({ mesh, side: half });
           }
@@ -313,6 +349,11 @@ export function ChainScene({
 
         const mesh = new THREE.Mesh(closedGeometry, steel);
         mesh.position.x = baseX;
+        // ZYX so the link's own quarter-turn about X is applied first and the
+        // swing about Z acts in world space. Three's default XYZ order applies
+        // Z first, which for the alternating (already X-tipped) links swung
+        // them about the wrong axis and twisted the half out of formation.
+        mesh.rotation.order = "ZYX";
         group.add(mesh);
         links.push({
           mesh,
@@ -324,47 +365,107 @@ export function ChainScene({
           baseY,
           baseRotZ,
           baseRotX,
+          phase,
+          release,
         });
       }
 
       /** Places every piece for a given scroll progress. */
+      /**
+       * Places every piece for a given scroll progress, in three stages that
+       * follow how chain actually fails under load:
+       *
+       *  1. Strain — the chain pulls taut, its sag flattening out, while the
+       *     weakest link stretches and its two sides bow apart. Nothing has
+       *     separated yet.
+       *  2. Snap — that link lets go. Both halves recoil away from the break
+       *     hard and fast, then decelerate (easeOutCubic).
+       *  3. Fall — gravity takes over as an accelerating t² term, so pieces
+       *     arc downward rather than flying straight out, tumbling as they
+       *     go. Links release progressively outward from the break, so the
+       *     chain comes apart as a travelling wave rather than in unison.
+       */
       function applyTransforms(p: number) {
-        const ramp = mapRange(p, [
-          [0, 0],
-          [0.12, 0],
-          [1, 1],
-        ]);
+        const strain = smoothstep(p / SNAP_AT);
 
         group.rotation.x = -0.14;
-        group.rotation.y = p * 0.18;
+        group.rotation.y = p * 0.14;
+
+        // The half translates as one body, so it keeps its shape. Staggering
+        // the translation instead makes the inner links — released first —
+        // travel further outward than the outer ones and catch up with them,
+        // compressing the half into a bunch. The stagger belongs on the
+        // tumble, where it reads as pieces moving individually.
+        const tBody = clamp01((p - SNAP_AT) / FALL_SPAN);
+        const bodyRecoil = easeOutCubic(tBody);
+        const bodyGravity = tBody * tBody;
+        const bodyTurn = 0.3 * bodyRecoil + 0.7 * bodyGravity;
 
         for (const link of links) {
-          const spin = link.side;
-          link.mesh.position.x = link.baseX + spin * link.dist * 2.2 * ramp;
-          link.mesh.position.y = link.baseY + link.ySign * link.dist * 0.35 * ramp;
-          link.mesh.position.z =
-            link.dist * 0.5 * ramp * (link.parity === 0 ? 1 : -1);
-          link.mesh.rotation.z =
-            link.baseRotZ + spin * (0.3 + link.dist * 1.6) * ramp;
-          link.mesh.rotation.x =
-            link.baseRotX +
-            link.dist * 0.45 * ramp * (link.parity === 0 ? 1 : -1);
+          const tl = clamp01((p - SNAP_AT - link.release) / FALL_SPAN);
+          const jitter = 0.3 * easeOutCubic(tl) + 0.7 * tl * tl;
+
+          // Taut before the break: the arc flattens and links creep apart.
+          const straighten = 1 - 0.75 * strain;
+          const stretch = link.side * link.dist * 0.06 * strain;
+
+          // Rotation about the half's own centre of mass — nothing anchors
+          // this chain, so a free fragment turns about its centroid.
+          const swing = link.side * SWING * bodyTurn;
+          const pivotX = link.side * HALF_CENTROID;
+          const dx = link.baseX + stretch - pivotX;
+          const dy = link.baseY * straighten;
+          const sin = Math.sin(swing);
+          const cos = Math.cos(swing);
+
+          link.mesh.position.x =
+            pivotX + dx * cos - dy * sin + link.side * RECOIL * bodyRecoil;
+          link.mesh.position.y =
+            dx * sin +
+            dy * cos +
+            KICK * bodyRecoil -
+            FALL * bodyGravity +
+            link.phase * 0.18 * jitter;
+          link.mesh.position.z = link.phase * 0.22 * bodyRecoil;
+
+          link.mesh.rotation.z = link.baseRotZ + swing + link.phase * 0.3 * jitter;
+          link.mesh.rotation.x = link.baseRotX + link.phase * 0.45 * jitter;
+          link.mesh.rotation.y = link.phase * 0.35 * (tl * tl);
         }
 
         for (const half of breakHalves) {
-          const hinge = mapRange(p, [
-            [0, 0],
-            [0.35, 1],
-            [1, 1],
-          ]);
-          const fly = mapRange(p, [
-            [0.3, 0],
-            [1, 1],
-          ]);
-          half.mesh.rotation.z = half.side * (0.55 * hinge + 1.7 * fly);
-          half.mesh.position.x = half.side * (0.35 * hinge + 2.0 * fly);
-          half.mesh.position.y = -SAG + half.side * (-0.12 * hinge - 0.3 * fly);
-          half.mesh.position.z = 0.15 * hinge + 0.35 * fly;
+          const tl = clamp01((p - SNAP_AT) / FALL_SPAN);
+          const jitter = 0.3 * easeOutCubic(tl) + 0.7 * tl * tl;
+          const straighten = 1 - 0.75 * strain;
+
+          // The failing link stretches and bows open before it parts, then
+          // releases back to its own shape once it has separated.
+          half.mesh.scale.x = 1 + 0.16 * strain * (1 - tl);
+
+          // Each snapped end is still threaded through its neighbour, so it
+          // travels with its own half rather than flying off ahead of it —
+          // giving it a larger recoil made it overtake and land on top of the
+          // links it is supposed to be attached to.
+          const swing = half.side * SWING * bodyTurn;
+          const pivotX = half.side * HALF_CENTROID;
+          const dx = -pivotX;
+          const dy = -SAG * straighten;
+          const sin = Math.sin(swing);
+          const cos = Math.cos(swing);
+          // The small extra push that the two ends give each other as the
+          // metal lets go.
+          const spring = half.side * (0.14 * strain + 0.6 * bodyRecoil);
+
+          half.mesh.position.x =
+            pivotX + dx * cos - dy * sin + half.side * RECOIL * bodyRecoil + spring;
+          half.mesh.position.y =
+            dx * sin + dy * cos + KICK * bodyRecoil - FALL * bodyGravity;
+          half.mesh.position.z = 0.18 * bodyRecoil;
+
+          half.mesh.rotation.z =
+            swing + half.side * (0.5 * strain + 1.2 * bodyTurn);
+          half.mesh.rotation.x = -ROLL + half.side * 1.0 * jitter;
+          half.mesh.rotation.y = half.side * 0.3 * (tl * tl);
         }
       }
 
@@ -405,8 +506,13 @@ export function ChainScene({
         const forWidth = halfWidth / (tanHalfFov * camera.aspect);
 
         // Measured from the frontmost geometry, since pieces travel toward
-        // the camera as they scatter.
-        camera.position.z = bounds.max.z + Math.max(forHeight, forWidth);
+        // the camera as they scatter. Capped so a long fall can't keep
+        // zooming out until the chain is a speck — past the cap the debris
+        // leaves frame instead, which is what falling debris should do.
+        camera.position.z = Math.min(
+          bounds.max.z + Math.max(forHeight, forWidth),
+          forWidth * MAX_PULLBACK,
+        );
         camera.updateProjectionMatrix();
       }
 

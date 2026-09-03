@@ -37,9 +37,12 @@ export function Hero() {
 
   return (
     // The tall wrapper is the scroll runway; the inner panel pins while the chain breaks.
-    <div ref={ref} className="relative h-[200vh]">
-      <section className="sticky top-0 flex h-screen flex-col overflow-hidden">
-        <div className="shell flex min-h-0 flex-1 flex-col items-center justify-center pt-[10vh] text-center">
+    <div ref={ref} className="relative h-[175vh]">
+      {/* Copy and chain are one centred stack with a fixed gap, rather than the
+          copy filling the space and the chain pinned beneath it — that left a
+          large dead gap between them and pushed the chain onto the scroll cue. */}
+      <section className="sticky top-0 flex h-screen flex-col items-center justify-center gap-8 overflow-hidden pb-16 pt-20">
+        <div className="shell flex flex-col items-center text-center">
           <motion.div
             style={{ opacity: copyOpacity, y: copyY }}
             className="flex flex-col items-center"
@@ -74,12 +77,12 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* The chain sits in the lower band and snaps as you scroll. */}
-        <div className="relative w-full shrink-0 pb-10">
+        {/* The chain sits directly below the copy and snaps as you scroll. */}
+        <div className="relative w-full shrink-0">
           <ChainScene
             progress={progress}
             animate={!reduceMotion}
-            className="mx-auto h-[26vh] max-h-[360px] min-h-[150px] w-full max-w-4xl"
+            className="mx-auto h-[13vh] w-full max-w-4xl sm:h-[16vh] sm:[@media(min-height:840px)]:h-[20vh]"
           />
         </div>
 
