@@ -107,10 +107,11 @@ export default function TermsPage() {
           harmed. We will tell you why when we can.
         </p>
         <p>
-          You can leave whenever you want. Deleting your account in Clerk stops
-          you signing in, and emailing us removes your profile and every pairing
-          request attached to it. Both steps are worth doing, and the{" "}
-          <Link href="/privacy">privacy policy</Link> explains why.
+          You can leave whenever you want. Deleting your account in Clerk takes
+          your profile and every pairing request attached to it with it. Your
+          newsletter subscription is separate and survives, so email us if you
+          want that stopped too. The <Link href="/privacy">privacy policy</Link>{" "}
+          has the detail.
         </p>
       </Clause>
 

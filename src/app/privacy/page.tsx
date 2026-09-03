@@ -154,23 +154,23 @@ export default function PrivacyPage() {
 
       <Clause heading="Keeping and deleting your data">
         <p>
-          We keep your profile until you ask us to delete it. Be aware that
-          deleting your account in Clerk removes your sign-in, but{" "}
-          <strong>
-            it does not by itself remove your profile from our database
-          </strong>
-          . We have not wired that up yet, so the row stays until we delete it
-          by hand. Email us and we will.
+          We keep your profile for as long as your account exists.{" "}
+          <strong>Deleting your account in Clerk deletes it here too.</strong>{" "}
+          Clerk tells us the moment you do, and we remove your profile row and
+          every pairing request you sent or received, including the reasons you
+          wrote and the ones written to you. It is a real delete, not a hidden
+          flag, and there is no copy kept behind it.
         </p>
         <p>
-          When we delete your profile, every pairing request you sent or
-          received goes with it. Newsletter signups are stored separately and
-          are not covered by a profile deletion, so say if you want those gone
-          too.
+          Newsletter signups are the exception. That list is keyed on an email
+          address and has no link to your account, because you can subscribe
+          without one, so deleting your account leaves your subscription alone.
+          Email us if you want off the list as well.
         </p>
         <p>
-          There is no self-serve delete button yet. We will confirm from the
-          address on file before acting, and we aim to do it within a week.
+          You can also just ask. If you would rather we deleted your profile
+          without you touching Clerk, write to us. We will confirm from the
+          address on file first, and we aim to do it within a week.
         </p>
         <p>
           One thing we cannot undo: an email address already released through an
@@ -195,10 +195,12 @@ export default function PrivacyPage() {
             any of them.
           </strong>{" "}
           There is no age gate, no parental consent flow, no cookie consent
-          banner, no data export tool, and no automated deletion. What we do
-          have is a small amount of data, a short list of processors, and an
-          email address a real person reads. If you are a parent, guardian, or
-          member who wants something removed, write to us and we will remove it.
+          banner, and no data export tool. Deleting your account does now erase
+          your profile automatically, but everything else here runs on people
+          rather than tooling. What we do have is a small amount of data, a
+          short list of processors, and an email address a real person reads. If
+          you are a parent, guardian, or member who wants something removed,
+          write to us and we will remove it.
         </p>
       </Clause>
 
