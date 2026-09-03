@@ -22,7 +22,9 @@ export function LegalPage({
 }) {
   return (
     <Section className="pt-40 lg:pt-48">
-      <div className="max-w-2xl">
+      {/* The shell is 76rem; a legal document wants a ~42rem measure, so the
+          column is centred in it rather than left against the gutter. */}
+      <div className="mx-auto max-w-2xl">
         <span className="eyebrow">{eyebrow}</span>
         <h1 className="mt-8 text-h1 font-medium text-balance">{title}</h1>
         <p className="mt-6 text-body-lg text-fg-muted text-pretty">{intro}</p>
@@ -39,7 +41,7 @@ export function LegalPage({
         </p>
       </div>
 
-      <div className="mt-16 max-w-2xl">{children}</div>
+      <div className="mx-auto mt-16 max-w-2xl">{children}</div>
     </Section>
   );
 }
