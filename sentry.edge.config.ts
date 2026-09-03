@@ -6,7 +6,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://e2ee0d73044d45cf144af98eea6070d0@o4512019474743296.ingest.us.sentry.io/4512019478675456",
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   dataCollection: {
     // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
