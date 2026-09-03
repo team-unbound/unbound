@@ -133,15 +133,23 @@ export function ChainScene({
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Computed lazily so it reflects the real client the moment this renders,
-  // rather than needing a post-mount setState just to react to it.
-  const [failed, setFailed] = useState(
-    () => typeof window !== "undefined" && !hasWebGL(),
-  );
+  // Always starts false on both server and client so the first hydrated
+  // render is structurally identical either way — a lazy initializer that
+  // called hasWebGL() here would resolve differently client-side than the
+  // server's "unknown" case whenever WebGL is genuinely unavailable,
+  // producing exactly the hydration mismatch this pattern is meant to avoid
+  // (the same bug class fixed in Reveal). The capability check happens
+  // inside the effect below instead, alongside the render-failure check.
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container || failed) return;
+
+    if (!hasWebGL()) {
+      queueMicrotask(() => setFailed(true));
+      return;
+    }
 
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
@@ -165,6 +173,17 @@ export function ChainScene({
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       container.appendChild(renderer.domElement);
 
+      // Context loss happens after successful setup (GPU driver reset, tab
+      // backgrounding on some platforms) — not a thrown exception, so the
+      // try/catch below can't see it. Without this the canvas would just
+      // freeze on its last frame with nothing logged anywhere.
+      const onContextLost = (event: Event) => {
+        event.preventDefault();
+        console.error("[ChainScene] WebGL context lost");
+        Sentry.captureMessage("chain-scene: WebGL context lost", "warning");
+      };
+      renderer.domElement.addEventListener("webglcontextlost", onContextLost);
+
       // Studio-style image-based lighting for realistic metal reflections,
       // generated procedurally so there's no external HDRI file to fetch.
       const pmrem = new THREE.PMREMGenerator(renderer);
@@ -181,12 +200,15 @@ export function ChainScene({
       const fill = new THREE.AmbientLight(0xffffff, 0.35);
       scene.add(fill);
 
-      const steel = new THREE.MeshPhysicalMaterial({
+      // MeshStandardMaterial rather than MeshPhysicalMaterial: no clearcoat
+      // layer means one fewer shader permutation to compile, which matters
+      // because a shader compile failure on some GPU/driver combination is
+      // the most likely way this scene silently fails for a given visitor.
+      // Visually near-identical for a satin steel look; meaningfully safer.
+      const steel = new THREE.MeshStandardMaterial({
         color: 0xcfd2d6,
         metalness: 1,
-        roughness: 0.36,
-        clearcoat: 0.2,
-        clearcoatRoughness: 0.3,
+        roughness: 0.38,
         envMapIntensity: 1.15,
       });
 
@@ -294,7 +316,6 @@ export function ChainScene({
 
       render(animate ? progress.get() : 0);
 
-
       if (animate) {
         unsubscribe = progress.on("change", (v) => {
           if (!disposed) render(v);
@@ -305,6 +326,7 @@ export function ChainScene({
         disposed = true;
         unsubscribe?.();
         resizeObserver?.disconnect();
+        renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
         container!.removeChild(renderer.domElement);
         closedGeometry.dispose();
         rightHalfGeometry.dispose();
@@ -315,6 +337,9 @@ export function ChainScene({
         renderer.dispose();
       };
     } catch (error) {
+      // Logged directly, not just to Sentry, so the exact failure is visible
+      // in devtools without needing dashboard access.
+      console.error("[ChainScene] falling back — WebGL setup failed:", error);
       Sentry.captureException(error, { tags: { component: "chain-scene" } });
       // Deferred so this reads as reacting to the failure, not a synchronous
       // setState-during-effect (which react-hooks/set-state-in-effect flags).
@@ -326,11 +351,16 @@ export function ChainScene({
   }, [animate, failed]);
 
   if (failed) {
+    // Sized the same as the real canvas would be (`className` carries the
+    // height/width utilities from Hero), with the visible mark nested inside
+    // rather than merged into the same class string — concatenating classes
+    // onto one element let Tailwind's cascade silently override the intended
+    // "thin line" look with the container's full h-56/h-80 sizing instead,
+    // producing a plain gray box instead of a subtle divider.
     return (
-      <div
-        aria-hidden="true"
-        className={`h-px w-2/3 bg-gradient-to-r from-transparent via-line-strong to-transparent ${className ?? ""}`}
-      />
+      <div aria-hidden="true" className={`flex items-center justify-center ${className ?? ""}`}>
+        <div className="h-px w-2/3 bg-gradient-to-r from-transparent via-line-strong to-transparent" />
+      </div>
     );
   }
 
