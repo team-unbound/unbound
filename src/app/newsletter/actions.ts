@@ -3,6 +3,11 @@
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { newsletterSubscribers } from "@/db/schema";
+import {
+  checkRateLimit,
+  getClientIp,
+  retryAfterLabel,
+} from "@/lib/rate-limit";
 
 const subscribeSchema = z.object({
   email: z.email("Enter a valid email address.").max(320),
@@ -19,6 +24,16 @@ export async function subscribeToNewsletter(
   _prev: SubscribeState,
   formData: FormData,
 ): Promise<SubscribeState> {
+  // Anonymous endpoint, so the only key available is the caller's IP.
+  const ip = await getClientIp();
+  const limit = await checkRateLimit("newsletter", ip);
+  if (!limit.success) {
+    return {
+      status: "error",
+      message: `Too many signups from this connection. Try again ${retryAfterLabel(limit.retryAfter)}.`,
+    };
+  }
+
   const parsed = subscribeSchema.safeParse({
     email: String(formData.get("email") ?? "").trim(),
     firstName: String(formData.get("firstName") ?? "").trim() || undefined,
