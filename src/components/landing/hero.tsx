@@ -10,7 +10,7 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import { BreakingChain } from "./breaking-chain";
+import { ChainScene } from "./chain-scene";
 
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
@@ -76,7 +76,11 @@ export function Hero() {
 
         {/* The chain sits in the lower band and snaps as you scroll. */}
         <div className="relative w-full pb-16">
-          <BreakingChain progress={progress} />
+          <ChainScene
+            progress={progress}
+            animate={!reduceMotion}
+            className="h-56 w-full sm:h-64 lg:h-80"
+          />
         </div>
 
         <motion.div

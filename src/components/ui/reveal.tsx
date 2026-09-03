@@ -1,9 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 
-/** Fade-and-rise once, when the element first scrolls into view. */
+/**
+ * Fade-and-rise once, when the element first scrolls into view.
+ *
+ * Always renders the same `motion.div` — no manual `useReducedMotion()`
+ * branch here. That branch used to early-return a plain `<div>` with no
+ * style attribute when reduced motion was on, which differs structurally
+ * from the styled `motion.div` the server always renders (SSR can't know
+ * the client's OS preference), producing a hydration mismatch for anyone
+ * with reduced motion enabled. Respecting the preference is handled once,
+ * safely, by `<MotionConfig reducedMotion="user">` in the root layout,
+ * which skips the actual interpolation without changing what gets rendered.
+ */
 export function Reveal({
   children,
   delay = 0,
@@ -13,10 +24,6 @@ export function Reveal({
   delay?: number;
   className?: string;
 }) {
-  const reduceMotion = useReducedMotion();
-
-  if (reduceMotion) return <div className={className}>{children}</div>;
-
   return (
     <motion.div
       className={className}
