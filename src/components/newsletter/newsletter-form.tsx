@@ -15,7 +15,8 @@ export function NewsletterForm() {
     initialState,
   );
 
-  if (state.status === "success") {
+  if (state.status === "success" || state.status === "already") {
+    const returning = state.status === "already";
     return (
       <div
         role="status"
@@ -30,21 +31,35 @@ export function NewsletterForm() {
             strokeWidth={2}
             aria-hidden="true"
           >
-            <path d="m5 12.5 4.5 4.5L19 7" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="m5 12.5 4.5 4.5L19 7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
-        <h2 className="mt-6 text-h3 font-medium">You&rsquo;re on the list.</h2>
+        <h2 className="mt-6 text-h3 font-medium">
+          {returning ? "You're already subscribed." : "You're on the list."}
+        </h2>
         <p className="mt-3 text-body-sm text-fg-muted text-pretty">
-          We&rsquo;ll send the next issue to{" "}
-          <span className="text-fg">{state.email}</span>. No noise — build
-          notes, events and what the community is shipping.
+          {returning ? (
+            <>
+              <span className="text-fg">{state.email}</span> is already on the
+              list, so there is nothing to do. The next issue will reach you.
+            </>
+          ) : (
+            <>
+              We&rsquo;ll send the next issue to{" "}
+              <span className="text-fg">{state.email}</span>. Build notes,
+              events, and what the community is shipping. Nothing else.
+            </>
+          )}
         </p>
       </div>
     );
   }
 
-  const fieldErrors =
-    state.status === "error" ? (state.fieldErrors ?? {}) : {};
+  const fieldErrors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 
   return (
     <form

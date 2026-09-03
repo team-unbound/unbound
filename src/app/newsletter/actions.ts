@@ -3,11 +3,7 @@
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { newsletterSubscribers } from "@/db/schema";
-import {
-  checkRateLimit,
-  getClientIp,
-  retryAfterLabel,
-} from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp, retryAfterLabel } from "@/lib/rate-limit";
 
 const subscribeSchema = z.object({
   email: z.email("Enter a valid email address.").max(320),
@@ -18,6 +14,7 @@ const subscribeSchema = z.object({
 export type SubscribeState =
   | { status: "idle" }
   | { status: "success"; email: string }
+  | { status: "already"; email: string }
   | { status: "error"; message: string; fieldErrors?: Record<string, string> };
 
 export async function subscribeToNewsletter(
@@ -56,18 +53,23 @@ export async function subscribeToNewsletter(
   if (!isDatabaseConfigured) {
     return {
       status: "error",
-      message: "Signups aren't live yet — the database isn't connected.",
+      message: "Signups aren't live yet. The database isn't connected.",
     };
   }
 
   const { email, firstName, lastName } = parsed.data;
 
+  let inserted: { id: string }[];
   try {
-    await getDb()
+    inserted = await getDb()
       .insert(newsletterSubscribers)
       .values({ email, firstName, lastName })
-      // Re-submitting an existing address is a no-op, not an error.
-      .onConflictDoNothing();
+      // Conflicts on the lower(email) unique index, so Foo@x.com and
+      // foo@x.com are the same subscriber. Deliberately not an update: a
+      // second signup on a known address must not be able to overwrite the
+      // name the real owner gave us.
+      .onConflictDoNothing()
+      .returning({ id: newsletterSubscribers.id });
   } catch (error) {
     console.error("newsletter subscribe failed", error);
     return {
@@ -75,6 +77,9 @@ export async function subscribeToNewsletter(
       message: "Something went wrong on our end. Please try again.",
     };
   }
+
+  // No row back means the address was already on the list.
+  if (inserted.length === 0) return { status: "already", email };
 
   return { status: "success", email };
 }
