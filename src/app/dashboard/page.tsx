@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { CancelButton } from "@/components/dashboard/cancel-button";
 import { RespondButtons } from "@/components/dashboard/respond-buttons";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Section } from "@/components/ui/section";
@@ -94,6 +95,12 @@ function OutgoingCard({ request }: { request: OutgoingRequest }) {
         <p className="mt-4 text-body-sm text-fg-subtle">
           They passed this time. You can send a new request later.
         </p>
+      ) : null}
+
+      {request.status === "pending" ? (
+        <div className="mt-6">
+          <CancelButton requestId={request.id} />
+        </div>
       ) : null}
     </li>
   );

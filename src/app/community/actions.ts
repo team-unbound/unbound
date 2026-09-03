@@ -7,6 +7,7 @@ import { pairingRequests, profiles } from "@/db/schema";
 import { requireProfile } from "@/lib/auth";
 import { checkRateLimit, retryAfterLabel } from "@/lib/rate-limit";
 import {
+  cancelPairingRequestSchema,
   fieldErrorsFrom,
   pairingRequestSchema,
   pairingResponseSchema,
@@ -173,4 +174,67 @@ export async function respondToPairingRequest(
   revalidatePath("/dashboard");
   revalidatePath("/community");
   return { status: "success", decision };
+}
+
+export type CancelState =
+  | { status: "idle" }
+  | { status: "success" }
+  | { status: "error"; message: string };
+
+/**
+ * Cancel a request the signed-in user sent, while it's still pending.
+ *
+ * Same ownership-in-the-WHERE-clause pattern as respondToPairingRequest, but
+ * mirrored onto the sender side: sender_id must match the session's profile
+ * and status must still be 'pending', or zero rows match and nothing happens.
+ * The row is deleted outright (not marked with a status) so the sender is
+ * free to send a fresh request afterward — cancelling and declining are
+ * different actions on different sides of the request, and don't share a
+ * "cancelled" status in the enum.
+ */
+export async function cancelPairingRequest(
+  _prev: CancelState,
+  formData: FormData,
+): Promise<CancelState> {
+  const sender = await requireProfile();
+
+  const limit = await checkRateLimit("pairingRespond", sender.id);
+  if (!limit.success) {
+    return {
+      status: "error",
+      message: `Too many changes at once. Try again ${retryAfterLabel(limit.retryAfter)}.`,
+    };
+  }
+
+  const parsed = cancelPairingRequestSchema.safeParse({
+    requestId: String(formData.get("requestId") ?? ""),
+  });
+
+  if (!parsed.success) {
+    return { status: "error", message: "That request couldn't be found." };
+  }
+
+  const deleted = await getDb()
+    .delete(pairingRequests)
+    .where(
+      and(
+        eq(pairingRequests.id, parsed.data.requestId),
+        // Only the sender may cancel...
+        eq(pairingRequests.senderId, sender.id),
+        // ...and only while it's still pending.
+        eq(pairingRequests.status, "pending"),
+      ),
+    )
+    .returning({ id: pairingRequests.id });
+
+  if (deleted.length === 0) {
+    return {
+      status: "error",
+      message: "That request can't be cancelled anymore.",
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/community");
+  return { status: "success" };
 }

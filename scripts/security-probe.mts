@@ -110,6 +110,24 @@ try {
   );
   check("declined request hides email", declinedReveal.rows[0].recipient_email === null);
 
+  console.log("\nCancel — sender-side ownership");
+  const cancelReq = await c.query(
+    `INSERT INTO pairing_requests (sender_id, recipient_id, reason)
+     VALUES ($1,$2,$3) RETURNING id`,
+    [A, B, "Second probe request, unique because prior one is accepted."],
+  );
+  const cancelReqId = cancelReq.rows[0].id as string;
+  const cancel = (requestId: string, actingSenderId: string) =>
+    c.query(
+      `DELETE FROM pairing_requests
+       WHERE id=$1 AND sender_id=$2 AND status='pending' RETURNING id`,
+      [requestId, actingSenderId],
+    );
+  check("recipient (Bob) cannot cancel Alice's request", (await cancel(cancelReqId, B)).rowCount === 0);
+  check("unrelated user (Carol) cannot cancel", (await cancel(cancelReqId, C)).rowCount === 0);
+  check("sender (Alice) CAN cancel her own", (await cancel(cancelReqId, A)).rowCount === 1);
+  check("cancelling twice is a no-op", (await cancel(cancelReqId, A)).rowCount === 0);
+
   console.log("\nNewsletter duplicate handling");
   await c.query(`INSERT INTO newsletter_subscribers (email) VALUES ('Probe@Example.invalid')`);
   const dupEmail = await c.query(

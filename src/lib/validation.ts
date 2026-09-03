@@ -65,6 +65,10 @@ export const pairingResponseSchema = z.object({
   decision: z.enum(["accepted", "declined"]),
 });
 
+export const cancelPairingRequestSchema = z.object({
+  requestId: z.uuid(),
+});
+
 /** Checkbox inputs arrive as "on" / absent. */
 export function checkboxToBoolean(value: FormDataEntryValue | null): boolean {
   return value === "on" || value === "true";
