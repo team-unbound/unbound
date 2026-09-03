@@ -5,11 +5,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "./logo";
 import { navLinks } from "@/lib/site";
+import { UserButton, useAuth } from "@clerk/nextjs";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // Core 3 removed <SignedIn>/<SignedOut>; the client-side hook is the
+  // equivalent inside a client component (<Show> is an async server component).
+  const { isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -48,12 +52,29 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="hidden rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg md:inline-flex"
-          >
-            Sign in
-          </Link>
+          {isLoaded ? (
+            isSignedIn ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="hidden rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg md:inline-flex"
+                >
+                  Dashboard
+                </Link>
+                <UserButton />
+              </>
+            ) : (
+              <Link
+                href="/sign-in"
+                className="hidden rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg md:inline-flex"
+              >
+                Sign in
+              </Link>
+            )
+          ) : (
+            // Reserve the space so the header doesn't jump once Clerk loads.
+            <div aria-hidden="true" className="hidden h-9 w-24 md:block" />
+          )}
 
           <button
             type="button"
@@ -79,7 +100,10 @@ export function SiteHeader() {
       {open && (
         <nav id="mobile-nav" className="shell pb-6 md:hidden" aria-label="Mobile">
           <ul className="flex flex-col gap-1 border-t border-line pt-4">
-            {[...navLinks, { href: "/dashboard", label: "Sign in" }].map((link) => (
+            {[...navLinks, isSignedIn
+              ? { href: "/dashboard", label: "Dashboard" }
+              : { href: "/sign-in", label: "Sign in" },
+            ].map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
