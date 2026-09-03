@@ -104,6 +104,9 @@ export default function GlobalError({
             >
               Try again
             </button>
+            {/* Deliberately a plain anchor: the React tree has failed, so a
+                full page load is safer than client-side navigation. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
               style={{
