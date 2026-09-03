@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { siteConfig } from "@/lib/site";
 import { clerkAppearance } from "@/lib/clerk-appearance";
+import { ToastProvider } from "@/components/ui/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,17 +50,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               a hydration mismatch, since SSR can't know the client's OS
               setting. This applies the preference after mount instead. */}
           <MotionConfig reducedMotion="user">
-            <a
-              href="#main"
-              className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-body-sm focus:text-canvas"
-            >
-              Skip to content
-            </a>
-            <SiteHeader />
-            <main id="main" className="flex flex-1 flex-col">
-              {children}
-            </main>
-            <SiteFooter />
+            <ToastProvider>
+              <a
+                href="#main"
+                className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-body-sm focus:text-canvas"
+              >
+                Skip to content
+              </a>
+              <SiteHeader />
+              <main id="main" className="flex flex-1 flex-col">
+                {children}
+              </main>
+              <SiteFooter />
+            </ToastProvider>
           </MotionConfig>
         </ClerkProvider>
       </body>
