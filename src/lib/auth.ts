@@ -64,11 +64,26 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 /**
  * The current user's completed profile, or a redirect: to sign-in when signed
  * out, to onboarding when the profile doesn't exist yet.
+ *
+ * Also re-syncs the stored email from Clerk. `profiles.email` is what gets
+ * revealed on an accepted pairing request, so it must not drift after someone
+ * changes their address in Clerk. A `user.updated` webhook would catch this
+ * immediately; this covers it on the member's next visit.
  */
 export async function requireProfile(): Promise<Profile> {
   await requireUserId();
   const profile = await getCurrentProfile();
   if (!profile || !profile.onboardedAt) redirect("/onboarding");
+
+  const email = await getVerifiedPrimaryEmail();
+  if (email && email !== profile.email) {
+    await getDb()
+      .update(profiles)
+      .set({ email, updatedAt: new Date() })
+      .where(eq(profiles.id, profile.id));
+    return { ...profile, email };
+  }
+
   return profile;
 }
 

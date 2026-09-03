@@ -9,9 +9,9 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
+    // This app handles member emails, bios and pairing reasons. Don't ship
+    // user identity or request bodies to Sentry; stack traces are enough.
+    userInfo: false,
+    httpBodies: [],
   },
 });

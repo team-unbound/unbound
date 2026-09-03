@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { profiles } from "@/db/schema";
 import { getVerifiedPrimaryEmail, requireUserId } from "@/lib/auth";
@@ -111,20 +110,4 @@ export async function saveProfile(
   if (target) redirect(target);
 
   return { status: "success" };
-}
-
-/** Toggle "open to pairing" from the dashboard without a full form submit. */
-export async function setOpenToPairing(open: boolean): Promise<void> {
-  const userId = await requireUserId();
-
-  const limit = await checkRateLimit("profile", userId);
-  if (!limit.success) return;
-
-  await getDb()
-    .update(profiles)
-    .set({ openToPairing: open, updatedAt: new Date() })
-    .where(eq(profiles.clerkUserId, userId));
-
-  revalidatePath("/community");
-  revalidatePath("/dashboard");
 }
