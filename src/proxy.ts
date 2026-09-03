@@ -16,6 +16,9 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/health",
+  // Verified by Svix signature inside the handler, not a Clerk session —
+  // this is a server-to-server call from Clerk, never a signed-in browser.
+  "/api/webhooks(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
