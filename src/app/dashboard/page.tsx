@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { CancelButton } from "@/components/dashboard/cancel-button";
 import { RespondButtons } from "@/components/dashboard/respond-buttons";
-import { ProfileForm } from "@/components/profile/profile-form";
+import { CopyEmailButton } from "@/components/ui/copy-email-button";
 import { Section } from "@/components/ui/section";
 import {
   getIncomingRequests,
@@ -27,12 +27,13 @@ function EmailReveal({ email, label }: { email: string; label: string }) {
   return (
     <p className="mt-4 rounded-lg border border-line bg-surface px-4 py-3 text-body-sm">
       <span className="text-fg-subtle">{label} </span>
-      <a
-        href={`mailto:${email}`}
+      <CopyEmailButton
+        email={email}
         className="text-fg underline underline-offset-4"
+        copiedMessage="Copied their email to your clipboard"
       >
         {email}
-      </a>
+      </CopyEmailButton>
     </p>
   );
 }
@@ -165,12 +166,20 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <Link
-          href="/community"
-          className="shrink-0 rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg"
-        >
-          Browse community
-        </Link>
+        <div className="flex shrink-0 flex-wrap gap-3">
+          <Link
+            href="/dashboard/settings"
+            className="rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg"
+          >
+            Edit your profile
+          </Link>
+          <Link
+            href="/community"
+            className="rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg"
+          >
+            Browse community
+          </Link>
+        </div>
       </div>
 
       <Panel title="Waiting on you" count={pendingIncoming.length}>
@@ -217,12 +226,6 @@ export default async function DashboardPage() {
             .
           </Empty>
         )}
-      </Panel>
-
-      <Panel title="Your profile">
-        <div className="mt-8 rounded-2xl border border-line bg-surface p-8 lg:p-10">
-          <ProfileForm profile={profile} />
-        </div>
       </Panel>
     </Section>
   );
