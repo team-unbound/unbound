@@ -32,7 +32,12 @@
   /* Capped against viewport height too: the hero is a full-height
      composition, and on short laptop viewports a width-only clamp
      makes the headline tall enough to push the chain below the fold. */
-  --text-display: clamp(3.25rem, min(10.5vw, 14vh), 9.5rem);
+  /* The lower bound is a deliberate phone size, not the desktop headline
+     scaled down: at 375px the vw term resolves well under it, so the floor is
+     what actually renders there. 3.25rem made a three-line headline tall
+     enough to push the chain past the bottom of a pinned panel on a 667px-tall
+     viewport (a 812px phone with its address bar showing). */
+  --text-display: clamp(2.75rem, min(10.5vw, 14vh), 9.5rem);
   --text-display--line-height: 0.9;
   --text-display--letter-spacing: -0.045em;
   --text-display--font-weight: 500;
