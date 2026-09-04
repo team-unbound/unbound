@@ -172,6 +172,25 @@ const FALL = 0.22;
 const SWING = 0.2;
 /** Centroid of one half's links, measured from the break. */
 const HALF_CENTROID = (SPACING * (LINKS_PER_SIDE + 1)) / 2;
+/**
+ * Scroll progress at which the pinned panel starts leaving the viewport. The
+ * panel is one viewport tall inside Hero's 175vh runway, so it unpins once
+ * the runway's last 100vh has passed. The framing below only has to hold the
+ * pieces this far; past it they are travelling off-screen anyway.
+ */
+const PIN_ENDS_AT = (175 - 100) / 175;
+/**
+ * Horizontal room reserved for the recoil — the counterpart of
+ * BREAK_HEADROOM, and derived the same way: how far the outermost piece has
+ * travelled by the time the panel unpins.
+ *
+ * Without it the frame is fitted to the resting chain alone, which only
+ * survives the break when the fit turns out to be height-limited. That is
+ * true at desktop aspect ratios and false at every phone one: a short wide
+ * band is width-limited, so the resting chain already spans the full frame
+ * and the very first frame of recoil pushes both halves straight out of it.
+ */
+const BREAK_SPREAD = RECOIL * easeOutCubic((PIN_ENDS_AT - SNAP_AT) / FALL_SPAN);
 
 function clamp01(v: number) {
   return v < 0 ? 0 : v > 1 ? 1 : v;
@@ -505,7 +524,7 @@ export function ChainScene({
        */
       function fitCamera() {
         const halfHeight = restHalfHeight * FIT_MARGIN * BREAK_HEADROOM;
-        const halfWidth = restHalfWidth * FIT_MARGIN;
+        const halfWidth = (restHalfWidth + BREAK_SPREAD) * FIT_MARGIN;
 
         const tanHalfFov = Math.tan((camera.fov * Math.PI) / 360);
         const forHeight = halfHeight / tanHalfFov;
