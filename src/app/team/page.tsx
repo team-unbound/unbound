@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { CopyEmailButton } from "@/components/ui/copy-email-button";
 import { Reveal } from "@/components/ui/reveal";
+import { CardGrid } from "@/components/ui/card-grid";
 import { Section } from "@/components/ui/section";
 import { team } from "@/lib/team";
 import { siteConfig } from "@/lib/site";
@@ -25,23 +27,26 @@ export default function TeamPage() {
           </p>
         </Reveal>
 
-        <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+        <CardGrid count={team.length} className="mt-16">
           {team.map((member, i) => (
             <Reveal key={member.name} delay={i * 0.08} className="bg-canvas">
               <article className="flex h-full flex-col items-start p-8 lg:p-10">
-                <div
-                  aria-hidden="true"
-                  className="flex h-20 w-20 items-center justify-center rounded-full border border-line-strong bg-surface text-h3 font-medium text-fg-muted"
-                >
-                  {member.initials}
-                </div>
+                {/* Decorative: the name follows immediately in the heading,
+                    so alt text here would just repeat it. */}
+                <Image
+                  src={member.avatar}
+                  alt=""
+                  width={80}
+                  height={80}
+                  className="h-20 w-20 rounded-full border border-line-strong bg-surface object-cover"
+                />
 
                 <h2 className="mt-6 text-h3 font-medium">{member.name}</h2>
                 <p className="mt-1 text-body-sm text-fg-muted">{member.role}</p>
               </article>
             </Reveal>
           ))}
-        </div>
+        </CardGrid>
 
         {/* One inbox for all three of us, so one button under the row rather
             than the same address repeated on every card. */}

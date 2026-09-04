@@ -37,11 +37,18 @@ export function Hero() {
 
   return (
     // The tall wrapper is the scroll runway; the inner panel pins while the chain breaks.
-    <div ref={ref} className="relative h-[175vh]">
+    // svh, not vh: on mobile browsers vh is the *large* viewport (address bar
+    // hidden), so a 100vh pinned panel is taller than what you can actually see
+    // whenever the bar is showing, and its bottom — the chain and the scroll cue
+    // — sits below the fold until you scroll. svh is the address-bar-visible
+    // height, so the panel fits in every state the browser can be in.
+    // Both lengths share the unit on purpose: ChainScene's PIN_ENDS_AT is the
+    // ratio between them, so they have to be measured the same way.
+    <div ref={ref} className="relative h-[175svh]">
       {/* Copy and chain are one centred stack with a fixed gap, rather than the
           copy filling the space and the chain pinned beneath it — that left a
           large dead gap between them and pushed the chain onto the scroll cue. */}
-      <section className="sticky top-0 flex h-screen flex-col items-center justify-center gap-8 overflow-hidden pb-16 pt-20">
+      <section className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-6 overflow-hidden pb-10 pt-20 sm:gap-8 sm:pb-16">
         <div className="shell flex flex-col items-center text-center">
           <motion.div
             style={{ opacity: copyOpacity, y: copyY }}
@@ -49,18 +56,18 @@ export function Hero() {
           >
             <span className="eyebrow">For ambitious builders</span>
 
-            <h1 className="mt-8 max-w-[16ch] text-display font-medium text-balance">
+            <h1 className="mt-6 max-w-[16ch] text-display font-medium text-balance sm:mt-8">
               Your Vision.
               <br />
               <span className="text-fg-muted">Our Digital Reality.</span>
             </h1>
 
-            <p className="mt-8 max-w-[52ch] text-body-lg text-fg-muted text-pretty">
+            <p className="mt-6 max-w-[52ch] text-body text-fg-muted text-pretty sm:mt-8 sm:text-body-lg">
               Unbound is where students, young founders, and creators find the
               people who take their ideas as seriously as they do.
             </p>
 
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-10">
               <Link
                 href="/community"
                 className="rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85"
@@ -77,12 +84,20 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* The chain sits directly below the copy and snaps as you scroll. */}
+        {/* The chain sits directly below the copy and snaps as you scroll.
+            Phones size the band off the viewport *width*: the camera fit is
+            width-limited at these ratios, so the chain's drawn size already
+            follows the canvas width and the height is only breathing room for
+            the pieces to fall through. Tying it to vh instead made the band
+            lurch every time the address bar moved, for no gain. (An
+            aspect-ratio box can't do this job — the canvas defaults to 300px
+            tall, which outvotes the ratio and then feeds back through the
+            resize observer as the band's real height.) */}
         <div className="relative w-full shrink-0">
           <ChainScene
             progress={progress}
             animate={!reduceMotion}
-            className="h-[13vh] w-full sm:h-[16vh] sm:[@media(min-height:840px)]:h-[20vh]"
+            className="h-[16vw] w-full sm:h-[16vh] sm:[@media(min-height:840px)]:h-[20vh]"
           />
         </div>
 

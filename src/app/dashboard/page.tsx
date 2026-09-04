@@ -40,7 +40,7 @@ function EmailReveal({ email, label }: { email: string; label: string }) {
 
 function IncomingCard({ request }: { request: IncomingRequest }) {
   return (
-    <li className="bg-canvas p-8">
+    <li className="bg-canvas p-8 break-words">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="text-h3 font-medium">{request.senderName}</h3>
@@ -73,7 +73,7 @@ function IncomingCard({ request }: { request: IncomingRequest }) {
 
 function OutgoingCard({ request }: { request: OutgoingRequest }) {
   return (
-    <li className="bg-canvas p-8">
+    <li className="bg-canvas p-8 break-words">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="text-h3 font-medium">{request.recipientName}</h3>
@@ -184,7 +184,7 @@ export default async function DashboardPage() {
 
       <Panel title="Waiting on you" count={pendingIncoming.length}>
         {pendingIncoming.length > 0 ? (
-          <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line">
+          <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line [&>*]:min-w-0">
             {pendingIncoming.map((request) => (
               <IncomingCard key={request.id} request={request} />
             ))}
@@ -199,7 +199,7 @@ export default async function DashboardPage() {
 
       {answeredIncoming.length > 0 ? (
         <Panel title="Already answered" count={answeredIncoming.length}>
-          <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line">
+          <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line [&>*]:min-w-0">
             {answeredIncoming.map((request) => (
               <IncomingCard key={request.id} request={request} />
             ))}
@@ -209,7 +209,7 @@ export default async function DashboardPage() {
 
       <Panel title="Requests you sent" count={outgoing.length}>
         {outgoing.length > 0 ? (
-          <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line">
+          <ul className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-line bg-line [&>*]:min-w-0">
             {outgoing.map((request) => (
               <OutgoingCard key={request.id} request={request} />
             ))}

@@ -104,6 +104,7 @@ export function ProfileForm({
           id="bio"
           name="bio"
           rows={4}
+          className="min-h-40 sm:min-h-0"
           maxLength={600}
           defaultValue={profile?.bio ?? ""}
           invalid={Boolean(errors.bio)}

@@ -43,12 +43,12 @@ export function SiteFooter() {
               <h2 className="text-label uppercase tracking-[0.18em] text-fg-subtle">
                 Explore
               </h2>
-              <ul className="mt-4 flex flex-col gap-2.5">
+              <ul className="mt-2 flex flex-col sm:mt-4 sm:gap-2.5">
                 {navLinks.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-body-sm text-fg-muted transition-colors hover:text-fg"
+                      className="block py-2 text-body-sm text-fg-muted transition-colors hover:text-fg sm:py-0"
                     >
                       {link.label}
                     </Link>
@@ -90,7 +90,7 @@ export function SiteFooter() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="transition-colors hover:text-fg"
+                  className="block py-2 transition-colors hover:text-fg sm:py-0"
                 >
                   {link.label}
                 </Link>
