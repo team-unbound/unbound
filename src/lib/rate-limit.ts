@@ -33,6 +33,8 @@ function make(tokens: number, window: Parameters<typeof Ratelimit.slidingWindow>
 
 /** Anonymous, IP-keyed: newsletter signup. */
 const newsletterLimiter = make(5, "10 m", "newsletter");
+/** Anonymous, IP-keyed: event signup. */
+const eventSignupLimiter = make(5, "10 m", "event-signup");
 /** Per-user: sending pairing requests. */
 const pairingLimiter = make(10, "1 h", "pairing");
 /** Per-user: responding to pairing requests (accept/decline). */
@@ -42,6 +44,7 @@ const profileLimiter = make(20, "1 h", "profile");
 
 const limiters = {
   newsletter: newsletterLimiter,
+  eventSignup: eventSignupLimiter,
   pairing: pairingLimiter,
   pairingRespond: pairingRespondLimiter,
   profile: profileLimiter,

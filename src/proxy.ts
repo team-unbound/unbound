@@ -10,7 +10,9 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/about",
   "/team",
-  "/events",
+  // Includes the per-event pages: signing up for an event deliberately does
+  // not require an Unbound account.
+  "/events(.*)",
   "/newsletter",
   "/community",
   "/privacy",

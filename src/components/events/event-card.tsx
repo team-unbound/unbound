@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import type { UnboundEvent } from "@/db/schema";
 import {
   formatEventDate,
@@ -14,8 +16,19 @@ export function EventCard({
 }) {
   return (
     <article
-      className={`flex h-full flex-col bg-canvas p-8 lg:p-10 ${past ? "text-fg-muted" : ""}`}
+      className={`group relative flex h-full flex-col bg-canvas p-8 break-words lg:p-10 ${past ? "text-fg-muted" : ""}`}
     >
+      {event.imageUrl ? (
+        <Image
+          src={event.imageUrl}
+          alt=""
+          width={1200}
+          height={1200}
+          sizes="(min-width: 1024px) 24rem, (min-width: 640px) 50vw, 100vw"
+          className={`mb-8 w-full rounded-lg border border-line ${past ? "opacity-60" : ""}`}
+        />
+      ) : null}
+
       <time
         dateTime={toDateTimeAttr(event.startsAt)}
         className="font-mono text-body-sm text-fg-subtle"
@@ -26,8 +39,16 @@ export function EventCard({
       <h3
         className={`mt-5 text-h3 font-medium text-balance ${past ? "text-fg-muted" : "text-fg"}`}
       >
-        {event.title}
+        {/* Stretched link: the whole card is the hit area, which matters far
+            more on a phone than a text-sized target does. */}
+        <Link href={`/events/${event.slug}`} className="after:absolute after:inset-0">
+          {event.title}
+        </Link>
       </h3>
+
+      {event.tagline ? (
+        <p className="mt-2 text-body-sm text-fg-subtle">{event.tagline}</p>
+      ) : null}
 
       {event.description ? (
         <p className="mt-3 flex-1 text-body-sm text-fg-muted text-pretty">
@@ -49,6 +70,13 @@ export function EventCard({
           </div>
         ) : null}
       </dl>
+
+      <span
+        aria-hidden="true"
+        className="mt-6 inline-flex items-center gap-2 text-body-sm text-fg underline-offset-4 group-hover:underline"
+      >
+        {past ? "See details" : "Sign up"} <span>&rarr;</span>
+      </span>
     </article>
   );
 }
