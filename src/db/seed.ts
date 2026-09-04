@@ -1,5 +1,5 @@
 /**
- * Inserts a few example events so the Events page has something to show.
+ * Inserts the real events the Events page should show.
  * Insert-only and idempotent (existing slugs are skipped) — it never deletes
  * or overwrites anything.
  *
@@ -8,40 +8,18 @@
 import { getDb, isDatabaseConfigured } from "./index";
 import { events } from "./schema";
 
-function daysFromNow(days: number, hour = 18) {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + days);
-  d.setUTCHours(hour, 0, 0, 0);
-  return d;
-}
-
-const sampleEvents = [
+const seedEvents = [
   {
-    slug: "build-night-01",
-    title: "Build Night 01",
+    slug: "unbound-hackathon-2026",
+    title: "Unbound Hackathon",
+    tagline: "Progress Is Proof.",
     description:
-      "Three hours, one table, whatever you're working on. Bring the half-finished thing and leave with it further along.",
-    location: "Toronto — venue TBC",
-    startsAt: daysFromNow(21),
-    endsAt: daysFromNow(21, 21),
-  },
-  {
-    slug: "founder-teardown",
-    title: "Founder Teardown",
-    description:
-      "Two members put their product in front of the room and take honest questions. No pitch decks.",
-    location: "Online",
-    startsAt: daysFromNow(38),
-    endsAt: daysFromNow(38, 20),
-  },
-  {
-    slug: "unbound-kickoff",
-    title: "Unbound Kickoff",
-    description:
-      "The first one. Introductions, what we're each building, and what this community should become.",
-    location: "Toronto",
-    startsAt: daysFromNow(-30),
-    endsAt: daysFromNow(-30, 21),
+      "Part panel, part sprint. You'll hear from people who build for a living, then get 90 minutes to make something and put it in front of the room. Bring an idea or pick one up when you get there — the point is having something to show by four, not having it figured out beforehand. Presented by Unbound, as part of Waterloo Tech Week.",
+    location: "E7 Engineering, University of Waterloo",
+    imageUrl: "/events/event1.jpeg",
+    // Noon to 4pm Eastern on Saturday 12 September 2026, stored as UTC.
+    startsAt: new Date("2026-09-12T16:00:00Z"),
+    endsAt: new Date("2026-09-12T20:00:00Z"),
   },
 ];
 
@@ -55,14 +33,14 @@ async function main() {
 
   const inserted = await getDb()
     .insert(events)
-    .values(sampleEvents)
+    .values(seedEvents)
     .onConflictDoNothing({ target: events.slug })
     .returning({ slug: events.slug });
 
   console.log(
     inserted.length > 0
       ? `Inserted ${inserted.length} event(s): ${inserted.map((e) => e.slug).join(", ")}`
-      : "Nothing to insert — all sample events already exist.",
+      : "Nothing to insert — every event already exists.",
   );
 }
 
