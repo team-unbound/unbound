@@ -7,7 +7,7 @@ import { initialsOf } from "@/lib/format";
  */
 export function PublicProfileCard({ profile }: { profile: PublicProfile }) {
   return (
-    <article className="flex h-full flex-col bg-canvas p-8 lg:p-10">
+    <article className="flex h-full flex-col bg-canvas p-8 break-words lg:p-10">
       <div className="flex items-start gap-4">
         <div
           aria-hidden="true"

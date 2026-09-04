@@ -21,7 +21,13 @@ export function CardGrid({
 }) {
   return (
     <div
-      className={`grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3 ${className}`}
+      // [&>*]:min-w-0 is what actually lets a card hold long unbroken user
+      // content. Grid items default to min-width:auto, so a 120-character name
+      // or a bare URL sets the column's min-content width and widens the track
+      // — and because the container clips, the overflow is silently cut off
+      // rather than scrolling. break-words on the card alone can't fix that:
+      // overflow-wrap doesn't feed back into intrinsic sizing.
+      className={`grid gap-px overflow-hidden rounded-2xl border border-line bg-line [&>*]:min-w-0 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
     >
       {children}
       {Array.from({ length: (2 - (count % 2)) % 2 }, (_, i) => (
