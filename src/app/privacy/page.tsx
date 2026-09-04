@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "What Unbound collects, who can see it, and how to get it deleted.",
 };
 
-const UPDATED = "2026-09-03";
+const UPDATED = "2026-09-04";
 
 export default function PrivacyPage() {
   return (
@@ -110,6 +110,16 @@ export default function PrivacyPage() {
         </p>
       </Clause>
 
+      <Clause heading="Event signups">
+        <p>
+          When you sign up for an event, we store your name, email, age, and
+          grade/year, along with the fact that you confirmed you&rsquo;re
+          committed to attending. We use this to plan the event and follow up
+          if details change. We don&rsquo;t share this with anyone outside
+          Unbound.
+        </p>
+      </Clause>
+
       <Clause heading="Services we hand data to">
         <ClauseList>
           <li>
@@ -117,7 +127,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Neon</strong> hosts the database holding profiles, pairing
-            requests, events, and newsletter signups.
+            requests, events, event signups, and newsletter signups.
           </li>
           <li>
             <strong>Vercel</strong> hosts and serves the site, and sees the
@@ -125,8 +135,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Upstash</strong> backs rate limiting. Your IP address is
-            used as a counter key on the newsletter form so one connection
-            cannot flood signups. It is a key in a short-lived counter, not a
+            used as a counter key on the newsletter and event signup forms so
+            one connection cannot flood signups. It is a key in a short-lived counter, not a
             record of your visit, and it is never joined to your profile.
           </li>
           <li>
