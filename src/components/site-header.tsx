@@ -70,7 +70,10 @@ export function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`text-body-sm transition-colors ${
+                  // py-2 gives the row a 38px hit area on a tablet, where this
+                  // nav is shown but the pointer is still a thumb. The bar is a
+                  // fixed-height flex row, so nothing moves visually.
+                  className={`py-2 text-body-sm transition-colors ${
                     active ? "text-fg" : "text-fg-muted hover:text-fg"
                   }`}
                 >
