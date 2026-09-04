@@ -527,7 +527,13 @@ export function ChainScene({
         const rect = container!.getBoundingClientRect();
         const width = Math.max(1, rect.width);
         const height = Math.max(1, rect.height);
-        renderer.setSize(width, height, false);
+        // updateStyle left on (the third argument defaults to true): with it
+        // suppressed the canvas got a backing store of width*devicePixelRatio
+        // but no CSS width, so it laid out at its bitmap size in CSS pixels —
+        // i.e. correct only on a DPR-1 display. Every phone is DPR 2-3, which
+        // rendered the chain at 2-3x inside an overflow-hidden panel: the frame
+        // was right, the canvas showing it was two viewports wide.
+        renderer.setSize(width, height);
         camera.aspect = width / height;
         // Framing depends on aspect, so it is recomputed here and only here.
         fitCamera();
