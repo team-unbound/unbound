@@ -3,7 +3,13 @@
  * there's nothing here for devtools to read. The blur is applied to generic
  * skeleton shapes, not to real content.
  */
-export function BlurredProfileCard({ variant = 0 }: { variant?: number }) {
+export function BlurredProfileCard({
+  variant = 0,
+  className = "",
+}: {
+  variant?: number;
+  className?: string;
+}) {
   // A little shape variation so the row doesn't look identically stamped out.
   const bioLines = variant % 3 === 0 ? 2 : variant % 3 === 1 ? 3 : 1;
   const nameWidth = ["w-32", "w-28", "w-36"][variant % 3];
@@ -11,7 +17,7 @@ export function BlurredProfileCard({ variant = 0 }: { variant?: number }) {
   return (
     <article
       aria-hidden="true"
-      className="relative flex h-full flex-col overflow-hidden bg-canvas p-8 lg:p-10"
+      className={`relative flex h-full flex-col overflow-hidden bg-canvas p-8 lg:p-10 ${className}`}
     >
       <div className="flex select-none flex-col blur-md">
         <div className="flex items-start gap-4">

@@ -12,10 +12,18 @@ import type { ReactNode } from "react";
  */
 export function CardGrid({
   count,
+  countAtTwoCols = count,
   children,
   className = "",
 }: {
   count: number;
+  /**
+   * How many cells the two-column layout actually renders, when that differs
+   * from `count` because a caller hides some children below `lg`. Its parity
+   * is what the two-column remainder depends on, and that does not follow
+   * from `count` alone.
+   */
+  countAtTwoCols?: number;
   children: ReactNode;
   className?: string;
 }) {
@@ -30,7 +38,7 @@ export function CardGrid({
       className={`grid gap-px overflow-hidden rounded-2xl border border-line bg-line [&>*]:min-w-0 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
     >
       {children}
-      {Array.from({ length: (2 - (count % 2)) % 2 }, (_, i) => (
+      {Array.from({ length: (2 - (countAtTwoCols % 2)) % 2 }, (_, i) => (
         <div
           key={`two-col-${i}`}
           aria-hidden="true"
