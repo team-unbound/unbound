@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Hero } from "@/components/landing/hero";
+import { CardGrid } from "@/components/ui/card-grid";
 import { Reveal } from "@/components/ui/reveal";
 import { Section, SectionHeading } from "@/components/ui/section";
 
@@ -41,7 +42,7 @@ export default function HomePage() {
           />
         </Reveal>
 
-        <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+        <CardGrid count={pillars.length} className="mt-16">
           {pillars.map((pillar, i) => (
             <Reveal key={pillar.index} delay={i * 0.08} className="bg-canvas">
               <article className="flex h-full flex-col p-8 lg:p-10">
@@ -64,7 +65,7 @@ export default function HomePage() {
               </article>
             </Reveal>
           ))}
-        </div>
+        </CardGrid>
       </Section>
 
       <Section className="border-t border-line">
