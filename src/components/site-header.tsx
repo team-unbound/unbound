@@ -82,7 +82,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="mobile-nav"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-line-strong md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong md:hidden"
           >
             <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
               <path
@@ -98,17 +98,23 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav id="mobile-nav" className="shell pb-6 md:hidden" aria-label="Mobile">
+        <nav
+          id="mobile-nav"
+          className="shell pb-6 md:hidden"
+          aria-label="Mobile"
+        >
           <ul className="flex flex-col gap-1 border-t border-line pt-4">
-            {[...navLinks, isSignedIn
-              ? { href: "/dashboard", label: "Dashboard" }
-              : { href: "/sign-in", label: "Sign in" },
+            {[
+              ...navLinks,
+              isSignedIn
+                ? { href: "/dashboard", label: "Dashboard" }
+                : { href: "/sign-in", label: "Sign in" },
             ].map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="block py-2 text-h3 text-fg-muted transition-colors hover:text-fg"
+                  className="block py-3 text-h3 text-fg-muted transition-colors hover:text-fg"
                 >
                   {link.label}
                 </Link>

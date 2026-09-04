@@ -56,7 +56,7 @@ export default function HomePage() {
                 </p>
                 <Link
                   href={pillar.href}
-                  className="mt-8 inline-flex items-center gap-2 text-body-sm text-fg underline-offset-4 hover:underline"
+                  className="mt-6 inline-flex items-center gap-2 py-2 text-body-sm text-fg underline-offset-4 hover:underline"
                 >
                   {pillar.cta}
                   <span aria-hidden="true">&rarr;</span>
