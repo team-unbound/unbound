@@ -29,9 +29,9 @@
   --color-fg-subtle: #6b6b6b;
 
   /* ---- Type scale (fluid) ---- */
-  /* Capped against viewport height too: the hero is a full-height
-     composition, and on short laptop viewports a width-only clamp
-     makes the headline tall enough to push the chain below the fold. */
+  /* Capped against viewport height as well as width: the hero fills the first
+     screen, and on a short laptop viewport a width-only clamp sizes the
+     headline tall enough to push the buttons under it out of view. */
   /* The lower bound is a deliberate phone size, not the desktop headline
      scaled down: at 375px the vw term resolves well under it, so the floor is
      what actually renders there. 3.25rem made a three-line headline tall
