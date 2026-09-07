@@ -9,7 +9,6 @@ import { checkboxToBoolean, eventSignupSchema, fieldErrorsFrom } from "@/lib/val
 export type EventSignupState =
   | { status: "idle" }
   | { status: "success"; fullName: string; email: string }
-  | { status: "already"; email: string }
   | { status: "error"; message: string; fieldErrors?: Record<string, string> };
 
 export async function signUpForEvent(
@@ -70,9 +69,8 @@ export async function signUpForEvent(
   // so recording a different time for each would be inventing precision.
   const now = new Date();
 
-  let inserted: { id: string }[];
   try {
-    inserted = await db
+    await db
       .insert(eventSignups)
       .values({
         eventId: event.id,
@@ -88,8 +86,7 @@ export async function signUpForEvent(
       // Conflicts on (event_id, lower(email)). Deliberately not an update: a
       // second submit on a known address must not be able to overwrite the
       // details the real owner gave us.
-      .onConflictDoNothing()
-      .returning({ id: eventSignups.id });
+      .onConflictDoNothing();
   } catch (error) {
     console.error("event signup failed", error);
     return {
@@ -98,7 +95,10 @@ export async function signUpForEvent(
     };
   }
 
-  if (inserted.length === 0) return { status: "already", email };
-
+  // A new signup and an address already on the list answer identically. This
+  // form takes no session, so distinguishing them let anyone confirm whether a
+  // named person is attending a given event — one request per guess. The
+  // insert result is deliberately not inspected, and the name echoed back is
+  // the one the submitter just typed, never the one already stored.
   return { status: "success", fullName, email };
 }

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ProfileForm } from "@/components/profile/profile-form";
+import {
+  ProfileForm,
+  toProfileFormFields,
+} from "@/components/profile/profile-form";
 import { Section } from "@/components/ui/section";
 import { requireProfile } from "@/lib/auth";
 
@@ -35,7 +38,7 @@ export default async function ProfileSettingsPage() {
         </div>
 
         <div className="mt-12 rounded-2xl border border-line bg-surface p-8 lg:p-10">
-          <ProfileForm profile={profile} />
+          <ProfileForm profile={toProfileFormFields(profile)} />
         </div>
 
         <div className="mt-8 rounded-2xl border border-dashed border-line p-8">

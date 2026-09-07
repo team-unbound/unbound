@@ -14,7 +14,6 @@ const subscribeSchema = z.object({
 export type SubscribeState =
   | { status: "idle" }
   | { status: "success"; email: string }
-  | { status: "already"; email: string }
   | { status: "error"; message: string; fieldErrors?: Record<string, string> };
 
 export async function subscribeToNewsletter(
@@ -59,17 +58,15 @@ export async function subscribeToNewsletter(
 
   const { email, firstName, lastName } = parsed.data;
 
-  let inserted: { id: string }[];
   try {
-    inserted = await getDb()
+    await getDb()
       .insert(newsletterSubscribers)
       .values({ email, firstName, lastName })
       // Conflicts on the lower(email) unique index, so Foo@x.com and
       // foo@x.com are the same subscriber. Deliberately not an update: a
       // second signup on a known address must not be able to overwrite the
       // name the real owner gave us.
-      .onConflictDoNothing()
-      .returning({ id: newsletterSubscribers.id });
+      .onConflictDoNothing();
   } catch (error) {
     console.error("newsletter subscribe failed", error);
     return {
@@ -78,8 +75,9 @@ export async function subscribeToNewsletter(
     };
   }
 
-  // No row back means the address was already on the list.
-  if (inserted.length === 0) return { status: "already", email };
-
+  // A brand-new subscriber and an address already on the list get the exact
+  // same answer. Reporting "already subscribed" turned this open endpoint into
+  // an oracle: anyone could type a stranger's address and learn whether they
+  // are on our list. The insert result is deliberately not inspected.
   return { status: "success", email };
 }

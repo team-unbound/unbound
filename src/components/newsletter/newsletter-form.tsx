@@ -15,8 +15,7 @@ export function NewsletterForm() {
     initialState,
   );
 
-  if (state.status === "success" || state.status === "already") {
-    const returning = state.status === "already";
+  if (state.status === "success") {
     return (
       <div
         role="status"
@@ -38,22 +37,14 @@ export function NewsletterForm() {
             />
           </svg>
         </div>
-        <h2 className="mt-6 text-h3 font-medium">
-          {returning ? "You're already subscribed." : "You're on the list."}
-        </h2>
+        {/* One message whether or not this address was already subscribed.
+            Telling a returning subscriber apart from a new one would tell an
+            attacker the same thing about any address they typed. */}
+        <h2 className="mt-6 text-h3 font-medium">You&rsquo;re on the list.</h2>
         <p className="mt-3 text-body-sm text-fg-muted text-pretty">
-          {returning ? (
-            <>
-              <span className="text-fg">{state.email}</span> is already on the
-              list, so there is nothing to do. The next issue will reach you.
-            </>
-          ) : (
-            <>
-              We&rsquo;ll send the next issue to{" "}
-              <span className="text-fg">{state.email}</span>. Build notes,
-              events, and what the community is shipping. Nothing else.
-            </>
-          )}
+          We&rsquo;ll send the next issue to{" "}
+          <span className="text-fg">{state.email}</span>. Build notes, events,
+          and what the community is shipping. Nothing else.
         </p>
       </div>
     );

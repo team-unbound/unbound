@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ProfileForm } from "@/components/profile/profile-form";
+import {
+  ProfileForm,
+  toProfileFormFields,
+} from "@/components/profile/profile-form";
 import { Section } from "@/components/ui/section";
 import { getCurrentProfile, requireUserId } from "@/lib/auth";
 
@@ -28,7 +31,7 @@ export default async function OnboardingPage() {
 
         <div className="mt-12">
           <ProfileForm
-            profile={profile}
+            profile={toProfileFormFields(profile)}
             submitLabel="Join the community"
             redirectTo="/dashboard"
           />

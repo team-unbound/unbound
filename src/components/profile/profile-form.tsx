@@ -11,12 +11,66 @@ import type { Profile } from "@/db/schema";
 
 const initialState: ProfileFormState = { status: "idle" };
 
+/**
+ * Only the columns this form actually puts in an input.
+ *
+ * Deliberately not the whole `Profile` row: a client component's props are
+ * serialised into the RSC payload and sit in the page source whether or not
+ * anything renders them, so passing the row wholesale shipped the member's
+ * email, their Clerk user id and both timestamps to the browser to fill in
+ * seven text boxes. Nothing here is secret from the person filling the form in
+ * — it is their own profile — but the narrower type means a column added to
+ * the schema later is not silently published along with it.
+ */
+export type ProfileFormFields = Pick<
+  Profile,
+  | "fullName"
+  | "gradeYear"
+  | "school"
+  | "bio"
+  | "funFacts"
+  | "profession"
+  | "tags"
+  | "openToPairing"
+>;
+
+/**
+ * Narrows a profile row to the fields the form serialises. Structural typing
+ * would happily accept the whole row where `ProfileFormFields` is expected and
+ * ship every column with it, so callers pass their row through this.
+ */
+export function toProfileFormFields(
+  profile: Profile | null | undefined,
+): ProfileFormFields | null {
+  if (!profile) return null;
+  const {
+    fullName,
+    gradeYear,
+    school,
+    bio,
+    funFacts,
+    profession,
+    tags,
+    openToPairing,
+  } = profile;
+  return {
+    fullName,
+    gradeYear,
+    school,
+    bio,
+    funFacts,
+    profession,
+    tags,
+    openToPairing,
+  };
+}
+
 export function ProfileForm({
   profile,
   submitLabel = "Save profile",
   redirectTo,
 }: {
-  profile?: Profile | null;
+  profile?: ProfileFormFields | null;
   submitLabel?: string;
   /** Where to send the user after a successful save (must be a local path). */
   redirectTo?: string;

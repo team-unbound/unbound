@@ -57,8 +57,7 @@ export function EventSignupForm({
     formAction(formData);
   }
 
-  if (state.status === "success" || state.status === "already") {
-    const returning = state.status === "already";
+  if (state.status === "success") {
     return (
       <div
         role="status"
@@ -80,23 +79,14 @@ export function EventSignupForm({
             />
           </svg>
         </div>
-        <h2 className="mt-6 text-h3 font-medium">
-          {returning ? "You're already signed up." : "You're in."}
-        </h2>
+        {/* One message whether or not this address already had a seat. A
+            separate "already signed up" screen would confirm to anyone who
+            typed a stranger's address that they are attending. */}
+        <h2 className="mt-6 text-h3 font-medium">You&rsquo;re in.</h2>
         <p className="mt-3 text-body-sm text-fg-muted text-pretty">
-          {returning ? (
-            <>
-              <span className="text-fg">{state.email}</span> is already on the
-              list for {eventTitle}, so there&rsquo;s nothing else to do. See
-              you there.
-            </>
-          ) : (
-            <>
-              We&rsquo;ve got you down for {eventTitle}, {state.fullName}.
-              We&rsquo;ll send the details to{" "}
-              <span className="text-fg">{state.email}</span> before the day.
-            </>
-          )}
+          We&rsquo;ve got you down for {eventTitle}, {state.fullName}.
+          We&rsquo;ll send the details to{" "}
+          <span className="text-fg">{state.email}</span> before the day.
         </p>
         <p className="mt-5 text-body-sm text-fg-subtle text-pretty">
           Something come up? Reply to that email and tell us — a seat you
