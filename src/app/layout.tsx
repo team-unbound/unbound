@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { siteConfig } from "@/lib/site";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 import { ToastProvider } from "@/components/ui/toast";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 {children}
               </main>
               <SiteFooter />
+              <Analytics />
             </ToastProvider>
           </MotionConfig>
         </ClerkProvider>
