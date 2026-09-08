@@ -4,6 +4,7 @@ import { getDb, isDatabaseConfigured } from "@/db";
 import { eventSignups, events } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { checkRateLimit, getClientIp, retryAfterLabel } from "@/lib/rate-limit";
+import { isRegistrationOpen } from "@/lib/registration";
 import { checkboxToBoolean, eventSignupSchema, fieldErrorsFrom } from "@/lib/validation";
 
 export type EventSignupState =
@@ -56,12 +57,15 @@ export async function signUpForEvent(
   // event rather than trusting the form. Without this a crafted post could
   // attach signups to an unpublished event, or to any uuid at all.
   const [event] = await db
-    .select({ id: events.id })
+    .select({ id: events.id, slug: events.slug })
     .from(events)
     .where(and(eq(events.id, eventId), eq(events.isPublished, true)))
     .limit(1);
 
-  if (!event) {
+  // A closed event answers the same way an unknown one does, and answers it
+  // before the insert. The page hiding the form only stops the browsers that
+  // load the page; this is what stops a post built by hand.
+  if (!event || !isRegistrationOpen(event.slug)) {
     return { status: "error", message: "That event isn't open for signups." };
   }
 

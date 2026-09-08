@@ -6,6 +6,7 @@ import {
   formatEventTime,
   toDateTimeAttr,
 } from "@/lib/format";
+import { isRegistrationOpen } from "@/lib/registration";
 
 export function EventCard({
   event,
@@ -14,6 +15,14 @@ export function EventCard({
   event: UnboundEvent;
   past?: boolean;
 }) {
+  // The card links to the detail page either way; this is only the label, and
+  // it has to agree with what the reader finds when they get there.
+  const cta = past
+    ? "See details"
+    : isRegistrationOpen(event.slug)
+      ? "Sign up"
+      : "Registration closed";
+
   return (
     <article
       className={`group relative flex h-full flex-col bg-canvas p-8 break-words lg:p-10 ${past ? "text-fg-muted" : ""}`}
@@ -75,7 +84,7 @@ export function EventCard({
         aria-hidden="true"
         className="mt-6 inline-flex items-center gap-2 text-body-sm text-fg underline-offset-4 group-hover:underline"
       >
-        {past ? "See details" : "Sign up"} <span>&rarr;</span>
+        {cta} <span>&rarr;</span>
       </span>
     </article>
   );
