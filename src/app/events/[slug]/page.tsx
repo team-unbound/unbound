@@ -11,7 +11,7 @@ import {
   formatEventTime,
   toDateTimeAttr,
 } from "@/lib/format";
-import { isRegistrationOpen } from "@/lib/registration";
+import { isInfoOnly, isRegistrationOpen } from "@/lib/registration";
 
 export const revalidate = 300;
 
@@ -46,6 +46,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
   if (!event) notFound();
 
   const registrationOpen = isRegistrationOpen(slug);
+  const infoOnly = isInfoOnly(slug);
 
   return (
     <Section className="pt-32 lg:pt-40">
@@ -117,6 +118,20 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                   Join the newsletter
                 </Link>{" "}
                 and you&rsquo;ll hear about the next one first.
+              </p>
+            </div>
+          ) : infoOnly ? (
+            <div className="rounded-2xl border border-dashed border-line p-8 text-center lg:p-10">
+              <p className="text-body-sm text-fg-muted text-pretty">
+                This one runs without a signup — the details above are
+                everything you need.{" "}
+                <Link
+                  href="/newsletter"
+                  className="text-fg underline underline-offset-4"
+                >
+                  Join the newsletter
+                </Link>{" "}
+                to hear about the rest.
               </p>
             </div>
           ) : registrationOpen ? (

@@ -6,7 +6,7 @@ import {
   formatEventTime,
   toDateTimeAttr,
 } from "@/lib/format";
-import { isRegistrationOpen } from "@/lib/registration";
+import { isInfoOnly, isRegistrationOpen } from "@/lib/registration";
 
 export function EventCard({
   event,
@@ -17,11 +17,12 @@ export function EventCard({
 }) {
   // The card links to the detail page either way; this is only the label, and
   // it has to agree with what the reader finds when they get there.
-  const cta = past
-    ? "See details"
-    : isRegistrationOpen(event.slug)
-      ? "Sign up"
-      : "Registration closed";
+  const cta =
+    past || isInfoOnly(event.slug)
+      ? "See details"
+      : isRegistrationOpen(event.slug)
+        ? "Sign up"
+        : "Registration closed";
 
   return (
     <article
