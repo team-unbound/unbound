@@ -9,7 +9,14 @@ import * as Sentry from "@sentry/nextjs";
  *
  * Availability tradeoff: if Redis is unreachable we ALLOW the request and
  * report to Sentry, rather than taking the site down when Upstash has an
- * outage. Missing configuration is treated the same way but warns loudly.
+ * outage.
+ *
+ * Missing configuration is different from an outage: it means the limits never
+ * existed at all, on every anonymous endpoint, for as long as the deploy has
+ * been up. It still allows the request — a missing env var should not take
+ * signups down — but in production it reports to Sentry rather than writing a
+ * console warning nobody reads. UPSTASH_REDIS_REST_URL and
+ * UPSTASH_REDIS_REST_TOKEN are what turn this on; see .env.example.
  */
 
 const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -33,6 +40,8 @@ function make(tokens: number, window: Parameters<typeof Ratelimit.slidingWindow>
 
 /** Anonymous, IP-keyed: newsletter signup. */
 const newsletterLimiter = make(5, "10 m", "newsletter");
+/** Anonymous, IP-keyed: event signup. */
+const eventSignupLimiter = make(5, "10 m", "event-signup");
 /** Per-user: sending pairing requests. */
 const pairingLimiter = make(10, "1 h", "pairing");
 /** Per-user: responding to pairing requests (accept/decline). */
@@ -42,6 +51,7 @@ const profileLimiter = make(20, "1 h", "profile");
 
 const limiters = {
   newsletter: newsletterLimiter,
+  eventSignup: eventSignupLimiter,
   pairing: pairingLimiter,
   pairingRespond: pairingRespondLimiter,
   profile: profileLimiter,
@@ -70,6 +80,27 @@ export async function getClientIp(): Promise<string> {
   return h.get("x-real-ip")?.trim() || "unknown";
 }
 
+/**
+ * Reported limiter names, so an unconfigured deploy raises one Sentry issue per
+ * limiter rather than one per request.
+ */
+const reportedUnconfigured = new Set<LimiterName>();
+
+function reportUnconfigured(name: LimiterName) {
+  console.warn(
+    `[rate-limit] Upstash not configured — "${name}" is not being limited.`,
+  );
+
+  if (process.env.NODE_ENV !== "production") return;
+  if (reportedUnconfigured.has(name)) return;
+  reportedUnconfigured.add(name);
+
+  Sentry.captureMessage(
+    `Rate limiting is disabled in production: "${name}" has no Upstash configuration.`,
+    { level: "error", tags: { limiter: name } },
+  );
+}
+
 export async function checkRateLimit(
   name: LimiterName,
   identifier: string,
@@ -77,9 +108,7 @@ export async function checkRateLimit(
   const limiter = limiters[name];
 
   if (!limiter) {
-    console.warn(
-      `[rate-limit] Upstash not configured — "${name}" is not being limited.`,
-    );
+    reportUnconfigured(name);
     return { success: true, retryAfter: 0 };
   }
 

@@ -53,6 +53,10 @@ export function PairingRequestForm({
           id={`reason-${recipientProfileId}`}
           name="reason"
           rows={3}
+          // rows=3 is about a fifth of the 600 characters this field accepts,
+          // which is a cramped box to compose a real reason in on a phone.
+          // Desktop keeps the original height.
+          className="min-h-32 sm:min-h-0"
           required
           minLength={20}
           maxLength={600}

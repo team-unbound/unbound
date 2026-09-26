@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Reveal } from "@/components/ui/reveal";
 import { Section, SectionHeading } from "@/components/ui/section";
 import { siteConfig } from "@/lib/site";
+import { CopyEmailButton } from "@/components/ui/copy-email-button";
 import {
   InstagramIcon,
   LinkedInIcon,
@@ -79,7 +80,10 @@ export default function AboutPage() {
             <SectionHeading eyebrow="Our story" title="Where this came from" />
           </Reveal>
 
-          <Reveal delay={0.08} className="flex flex-col gap-6 text-body-lg text-fg-muted text-pretty">
+          <Reveal
+            delay={0.08}
+            className="flex flex-col gap-6 text-body-lg text-fg-muted text-pretty"
+          >
             <p>
               Unbound started with a frustration a lot of us recognise. You have
               the idea, the late nights and more ambition than your timetable
@@ -118,7 +122,11 @@ export default function AboutPage() {
 
         <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
           {principles.map((principle, i) => (
-            <Reveal key={principle.index} delay={i * 0.06} className="bg-canvas">
+            <Reveal
+              key={principle.index}
+              delay={i * 0.06}
+              className="bg-canvas"
+            >
               <article className="flex h-full flex-col p-8 lg:p-10">
                 <span className="font-mono text-body-sm text-fg-subtle">
                   {principle.index}
@@ -167,9 +175,9 @@ export default function AboutPage() {
                 </li>
               ))}
               <li>
-                <a
-                  href={`mailto:${siteConfig.contactEmail}`}
-                  className="group flex items-center gap-5 py-5 transition-opacity hover:opacity-80"
+                <CopyEmailButton
+                  email={siteConfig.contactEmail}
+                  className="group flex w-full items-center gap-5 py-5 text-left transition-opacity hover:opacity-80"
                 >
                   <MailIcon className="h-5 w-5 shrink-0 text-fg-muted transition-colors group-hover:text-fg" />
                   <span className="text-h3 font-medium">Email</span>
@@ -179,7 +187,7 @@ export default function AboutPage() {
                   <span aria-hidden="true" className="text-fg-muted">
                     &rarr;
                   </span>
-                </a>
+                </CopyEmailButton>
               </li>
             </ul>
 

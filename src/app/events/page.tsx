@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EventCard } from "@/components/events/event-card";
+import { CardGrid } from "@/components/ui/card-grid";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { getSplitEvents } from "@/db/queries";
 import type { UnboundEvent } from "@/db/schema";
 import { siteConfig } from "@/lib/site";
+import { CopyEmailButton } from "@/components/ui/copy-email-button";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -24,13 +26,13 @@ function EventGrid({
   past?: boolean;
 }) {
   return (
-    <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+    <CardGrid count={events.length} className="mt-10">
       {events.map((event, i) => (
         <Reveal key={event.id} delay={i * 0.06} className="bg-canvas">
           <EventCard event={event} past={past} />
         </Reveal>
       ))}
-    </div>
+    </CardGrid>
   );
 }
 
@@ -96,13 +98,13 @@ export default async function EventsPage() {
           <EventGrid events={previous} past />
         ) : (
           <EmptyState>
-            No past events yet — we&rsquo;re just getting started.{" "}
-            <a
-              href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("Event idea for unbound")}`}
+            No past events yet, we&rsquo;re just getting started.{" "}
+            <CopyEmailButton
+              email={siteConfig.contactEmail}
               className="text-fg underline underline-offset-4"
             >
               Pitch us one
-            </a>
+            </CopyEmailButton>
             .
           </EmptyState>
         )}

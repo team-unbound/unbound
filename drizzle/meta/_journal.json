@@ -8,6 +8,13 @@
       "when": 1788391754175,
       "tag": "0000_overjoyed_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788501297420,
+      "tag": "0001_thin_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

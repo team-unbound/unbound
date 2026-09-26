@@ -3,11 +3,7 @@
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { newsletterSubscribers } from "@/db/schema";
-import {
-  checkRateLimit,
-  getClientIp,
-  retryAfterLabel,
-} from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp, retryAfterLabel } from "@/lib/rate-limit";
 
 const subscribeSchema = z.object({
   email: z.email("Enter a valid email address.").max(320),
@@ -56,7 +52,7 @@ export async function subscribeToNewsletter(
   if (!isDatabaseConfigured) {
     return {
       status: "error",
-      message: "Signups aren't live yet — the database isn't connected.",
+      message: "Signups aren't live yet. The database isn't connected.",
     };
   }
 
@@ -66,7 +62,10 @@ export async function subscribeToNewsletter(
     await getDb()
       .insert(newsletterSubscribers)
       .values({ email, firstName, lastName })
-      // Re-submitting an existing address is a no-op, not an error.
+      // Conflicts on the lower(email) unique index, so Foo@x.com and
+      // foo@x.com are the same subscriber. Deliberately not an update: a
+      // second signup on a known address must not be able to overwrite the
+      // name the real owner gave us.
       .onConflictDoNothing();
   } catch (error) {
     console.error("newsletter subscribe failed", error);
@@ -76,5 +75,9 @@ export async function subscribeToNewsletter(
     };
   }
 
+  // A brand-new subscriber and an address already on the list get the exact
+  // same answer. Reporting "already subscribed" turned this open endpoint into
+  // an oracle: anyone could type a stranger's address and learn whether they
+  // are on our list. The insert result is deliberately not inspected.
   return { status: "success", email };
 }

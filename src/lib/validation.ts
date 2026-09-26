@@ -60,6 +60,38 @@ export const pairingRequestSchema = z.object({
     .max(600, "Keep it under 600 characters."),
 });
 
+/**
+ * Event signup. Anonymous: no Clerk session is involved, so everything here
+ * is user-typed and nothing is trusted beyond what this parse guarantees.
+ */
+export const eventSignupSchema = z.object({
+  eventId: z.uuid("That event doesn't look right."),
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Tell us your name.")
+    .max(120, "That name is too long."),
+  email: z.email("Enter a valid email address.").max(320),
+  age: z
+    .coerce
+    .number("Enter your age as a number.")
+    .int("Enter your age as a whole number.")
+    // Matches the event_signups_age_range check, so a value the database
+    // would reject is caught here with a readable message instead.
+    .min(10, "Enter your real age.")
+    .max(120, "Enter your real age."),
+  gradeYear: z
+    .string()
+    .trim()
+    .min(1, "Tell us your grade or year.")
+    .max(80, "Keep that shorter."),
+  /**
+   * The commitment box. Refused rather than coerced: a false here is someone
+   * submitting without ticking it, which is exactly what must not be stored.
+   */
+  committed: z.literal(true, "Please confirm you're planning to show up."),
+});
+
 export const pairingResponseSchema = z.object({
   requestId: z.uuid(),
   decision: z.enum(["accepted", "declined"]),

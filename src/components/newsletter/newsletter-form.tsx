@@ -30,21 +30,27 @@ export function NewsletterForm() {
             strokeWidth={2}
             aria-hidden="true"
           >
-            <path d="m5 12.5 4.5 4.5L19 7" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="m5 12.5 4.5 4.5L19 7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
+        {/* One message whether or not this address was already subscribed.
+            Telling a returning subscriber apart from a new one would tell an
+            attacker the same thing about any address they typed. */}
         <h2 className="mt-6 text-h3 font-medium">You&rsquo;re on the list.</h2>
         <p className="mt-3 text-body-sm text-fg-muted text-pretty">
           We&rsquo;ll send the next issue to{" "}
-          <span className="text-fg">{state.email}</span>. No noise — build
-          notes, events and what the community is shipping.
+          <span className="text-fg">{state.email}</span>. Build notes, events,
+          and what the community is shipping. Nothing else.
         </p>
       </div>
     );
   }
 
-  const fieldErrors =
-    state.status === "error" ? (state.fieldErrors ?? {}) : {};
+  const fieldErrors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 
   return (
     <form

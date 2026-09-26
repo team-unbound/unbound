@@ -129,11 +129,40 @@ try {
   check("cancelling twice is a no-op", (await cancel(cancelReqId, A)).rowCount === 0);
 
   console.log("\nNewsletter duplicate handling");
-  await c.query(`INSERT INTO newsletter_subscribers (email) VALUES ('Probe@Example.invalid')`);
+  // Mirrors subscribeToNewsletter: the action reads .returning() to tell a
+  // fresh signup from an address that is already on the list.
+  const firstSignup = await c.query(
+    `INSERT INTO newsletter_subscribers (email, first_name)
+     VALUES ('Probe@Example.invalid', 'Real Owner')
+     ON CONFLICT DO NOTHING RETURNING id`);
+  check("first signup returns a row", firstSignup.rowCount === 1);
+
   const dupEmail = await c.query(
     `INSERT INTO newsletter_subscribers (email) VALUES ('probe@example.invalid')
      ON CONFLICT DO NOTHING RETURNING id`);
   check("case-insensitive duplicate email blocked", dupEmail.rowCount === 0);
+
+  const dupSpaced = await c.query(
+    `INSERT INTO newsletter_subscribers (email) VALUES ('PROBE@EXAMPLE.INVALID')
+     ON CONFLICT DO NOTHING RETURNING id`);
+  check("all-caps duplicate blocked too", dupSpaced.rowCount === 0);
+
+  const rows = await c.query(
+    `SELECT count(*)::int AS n FROM newsletter_subscribers
+     WHERE lower(email)='probe@example.invalid'`);
+  check("only one row exists for the address", rows.rows[0].n === 1);
+
+  // A resubscribe must not be able to rewrite the name the real owner gave us.
+  const owner = await c.query(
+    `SELECT first_name FROM newsletter_subscribers
+     WHERE lower(email)='probe@example.invalid'`);
+  check("duplicate signup cannot overwrite the stored name", owner.rows[0].first_name === "Real Owner");
+
+  // Two people behind one school NAT must both be able to sign up.
+  const other = await c.query(
+    `INSERT INTO newsletter_subscribers (email) VALUES ('someone.else@probe.invalid')
+     ON CONFLICT DO NOTHING RETURNING id`);
+  check("a different address on the same network still inserts", other.rowCount === 1);
 
 } finally {
   await c.query("ROLLBACK");

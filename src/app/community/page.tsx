@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BlurredProfileCard } from "@/components/community/blurred-profile-card";
 import { ProfileCard } from "@/components/community/profile-card";
 import { PublicProfileCard } from "@/components/community/public-profile-card";
+import { CardGrid } from "@/components/ui/card-grid";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import {
@@ -47,7 +48,7 @@ async function SignedInCommunity({ profileId }: { profileId: string }) {
       </Reveal>
 
       {members.length > 0 ? (
-        <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+        <CardGrid count={members.length} className="mt-16">
           {members.map((member, i) => (
             <Reveal
               key={member.id}
@@ -57,7 +58,7 @@ async function SignedInCommunity({ profileId }: { profileId: string }) {
               <ProfileCard profile={member} />
             </Reveal>
           ))}
-        </div>
+        </CardGrid>
       ) : (
         <div className="mt-16 rounded-2xl border border-dashed border-line p-10 text-center">
           <p className="text-body-sm text-fg-muted">
@@ -95,7 +96,11 @@ async function PublicCommunityPreview({
       </Reveal>
 
       {visible.length > 0 ? (
-        <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+        <CardGrid
+          count={visible.length + placeholderCount}
+          countAtTwoCols={visible.length + Math.min(placeholderCount, 4)}
+          className="mt-16"
+        >
           {visible.map((member, i) => (
             <Reveal
               key={member.id}
@@ -106,10 +111,22 @@ async function PublicCommunityPreview({
             </Reveal>
           ))}
 
+          {/* One row of blur per layout rather than six cards everywhere: on a
+              phone the full set is roughly 2,700px of placeholder to scroll
+              past before the sign-in CTA. Two at one column, four at two, all
+              six at three. CardGrid still counts all six — hiding whole rows
+              leaves the remainder maths unchanged, since 6 is divisible by
+              both 2 and 3. */}
           {Array.from({ length: placeholderCount }).map((_, i) => (
-            <BlurredProfileCard key={`placeholder-${i}`} variant={i} />
+            <BlurredProfileCard
+              key={`placeholder-${i}`}
+              variant={i}
+              className={
+                i >= 4 ? "hidden lg:flex" : i >= 2 ? "hidden sm:flex" : ""
+              }
+            />
           ))}
-        </div>
+        </CardGrid>
       ) : (
         <div className="mt-16 rounded-2xl border border-dashed border-line p-10 text-center">
           <p className="text-body-sm text-fg-muted">

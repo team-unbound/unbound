@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -85,8 +86,12 @@ export const events = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     title: text("title").notNull(),
     slug: text("slug").notNull().unique(),
+    /** Short line under the title, e.g. "Progress Is Proof." */
+    tagline: text("tagline"),
     description: text("description"),
     location: text("location"),
+    /** Path under /public, or an absolute URL. Used as the card + header art. */
+    imageUrl: text("image_url"),
     /** Upcoming vs. previous is derived from this against `now()`. */
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
@@ -99,6 +104,52 @@ export const events = pgTable(
       .defaultNow(),
   },
   (table) => [index("events_starts_at_idx").on(table.startsAt)],
+);
+
+/* ------------------------------------------------------------------ */
+/* Event signups                                                       */
+/*                                                                     */
+/* Deliberately not hung off `profiles`: anyone can sign up for an     */
+/* event without an Unbound account, so the only identity here is the  */
+/* name and address they typed.                                        */
+/* ------------------------------------------------------------------ */
+
+export const eventSignups = pgTable(
+  "event_signups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    fullName: text("full_name").notNull(),
+    email: text("email").notNull(),
+    /** Plain demographic figure, not a date of birth. */
+    age: integer("age").notNull(),
+    gradeYear: text("grade_year").notNull(),
+    /**
+     * The commitment checkbox, recorded the same way as any other consent:
+     * the fact and the moment, separately from the row's own timestamp. It is
+     * NOT NULL and the action refuses to insert it as false, so a row's
+     * existence is itself evidence the box was ticked.
+     */
+    committed: boolean("committed").notNull(),
+    committedAt: timestamp("committed_at", { withTimezone: true }).notNull(),
+    /** When the signup was submitted. */
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check("event_signups_committed", sql`${table.committed}`),
+    check("event_signups_age_range", sql`${table.age} BETWEEN 10 AND 120`),
+    // One signup per address per event; case-insensitive, so Foo@x.com and
+    // foo@x.com can't both take a seat.
+    uniqueIndex("event_signups_event_email_lower_idx").on(
+      table.eventId,
+      sql`lower(${table.email})`,
+    ),
+    index("event_signups_event_idx").on(table.eventId, table.createdAt),
+  ],
 );
 
 /* ------------------------------------------------------------------ */
@@ -145,5 +196,7 @@ export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type UnboundEvent = typeof events.$inferSelect;
+export type EventSignup = typeof eventSignups.$inferSelect;
+export type NewEventSignup = typeof eventSignups.$inferInsert;
 export type PairingRequest = typeof pairingRequests.$inferSelect;
 export type PairingStatus = (typeof pairingStatusEnum.enumValues)[number];

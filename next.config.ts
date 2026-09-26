@@ -1,8 +1,33 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+/**
+ * Response headers applied to every route.
+ *
+ * The framing rule is the one that matters here: /dashboard answers a pairing
+ * request with a single click, so an invisible cross-origin frame over a
+ * decoy button is enough to make a member accept or decline without knowing
+ * it. Nothing in the app frames anything, so DENY costs nothing.
+ *
+ * No Content-Security-Policy yet. Clerk and Sentry both need a hand-checked
+ * allowlist and a wrong one fails as a blank page, so it wants a deliberate
+ * pass against a running build rather than a guess bolted onto an audit.
+ */
+const securityHeaders = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    // Nothing in the app asks for any of these.
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  },
+];
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
