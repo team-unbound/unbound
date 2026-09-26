@@ -11,11 +11,9 @@ import {
   formatEventTime,
   toDateTimeAttr,
 } from "@/lib/format";
-import { isInfoOnly, isRegistrationOpen } from "@/lib/registration";
+import { capacityOf, isInfoOnly, isRegistrationOpen } from "@/lib/registration";
 
 export const revalidate = 300;
-
-const EVENT_CAPACITY = 50;
 
 export async function generateMetadata({
   params,
@@ -140,8 +138,8 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             <div className="rounded-2xl border border-line bg-surface p-8 lg:p-10">
               <h2 className="text-h3 font-medium">We&rsquo;re at capacity!</h2>
               <p className="mt-3 text-body-sm text-fg-muted text-pretty">
-                {event.title} is capped at {EVENT_CAPACITY} people and
-                we&rsquo;ve hit that number. Thanks for the interest — follow us
+                {event.title} is capped at {capacityOf(slug)} people and
+                we&rsquo;ve hit that number. Thanks for the interest. Follow us
                 for the next one.
               </p>
             </div>

@@ -1,5 +1,6 @@
 import "server-only";
-import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
+import { isRegistrationClosed } from "@/lib/registration";
 import { getDb, isDatabaseConfigured } from "./index";
 import { events, type UnboundEvent } from "./schema";
 
@@ -9,29 +10,30 @@ export type SplitEvents = {
 };
 
 /**
- * Published events split around `now`. Returns empty lists (rather than
- * throwing) while DATABASE_URL is still a placeholder.
+ * Published events split around `now`. A sold-out event goes under Previous
+ * even before it starts: there's nothing left to sign up for. Returns empty
+ * lists (rather than throwing) while DATABASE_URL is still a placeholder.
  */
 export async function getSplitEvents(): Promise<SplitEvents> {
   if (!isDatabaseConfigured) return { upcoming: [], previous: [] };
 
-  const db = getDb();
   const now = new Date();
 
-  const [upcoming, previous] = await Promise.all([
-    db
-      .select()
-      .from(events)
-      .where(and(eq(events.isPublished, true), gte(events.startsAt, now)))
-      .orderBy(asc(events.startsAt)),
-    db
-      .select()
-      .from(events)
-      .where(and(eq(events.isPublished, true), lt(events.startsAt, now)))
-      .orderBy(desc(events.startsAt)),
-  ]);
+  // Newest first, which is Previous's order; Upcoming is reversed below.
+  const published = await getDb()
+    .select()
+    .from(events)
+    .where(eq(events.isPublished, true))
+    .orderBy(desc(events.startsAt));
 
-  return { upcoming, previous };
+  const upcoming: UnboundEvent[] = [];
+  const previous: UnboundEvent[] = [];
+  for (const event of published) {
+    const done = event.startsAt < now || isRegistrationClosed(event.slug);
+    (done ? previous : upcoming).push(event);
+  }
+
+  return { upcoming: upcoming.reverse(), previous };
 }
 
 /**
