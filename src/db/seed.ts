@@ -26,12 +26,12 @@ const seedEvents = [
     title: "Unbound x YPLS Club",
     tagline: "Making Access Easier.",
     description:
-      "YPLS Club's third annual flagship summit, in partnership with Unbound. 500 students will sit down at 40 expert-led tables across 30+ industries, with keynotes from a TEDx speaker, a Google Canada director, and the Division Head of Cardiac Surgery at St. Michael's Hospital. Sponsored by RBC, Google, IBM, Deloitte, AMD, and more. Hosted by Rob Kamranpoor, founder of YPLS Club, at Arcadian Court in Toronto.",
+      "YPLS Club's third annual flagship summit, in partnership with Unbound. 500 students will sit down at 40 expert-led tables across 30+ industries, with keynotes from a TEDx speaker, a Google Canada director, and the Division Head of Cardiac Surgery at St. Michael's Hospital. Sponsored by RBC, Google, IBM, Deloitte, AMD, and more. Hosted by Rob Kamranpoor, founder of YPLS Club, at Arcadian Court in Toronto. The event is sold out and registration is closed.",
     location: "Arcadian Court, 401 Bay St, Toronto",
     imageUrl: "/events/event2.jpeg",
-    // 9am to 4pm Eastern on Sunday 4 October 2026, stored as UTC.
-    startsAt: new Date("2026-10-04T13:00:00Z"),
-    endsAt: new Date("2026-10-04T20:00:00Z"),
+    // 9am to 4pm Eastern on Saturday 3 October 2026, stored as UTC.
+    startsAt: new Date("2026-10-03T13:00:00Z"),
+    endsAt: new Date("2026-10-03T20:00:00Z"),
   },
 ];
 
