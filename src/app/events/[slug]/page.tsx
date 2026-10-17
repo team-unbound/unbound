@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { EventSignupForm } from "@/components/events/event-signup-form";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
+import { WaitlistCta } from "@/components/waitlist/waitlist-cta";
 import { getEventBySlug } from "@/db/queries";
 import {
   formatEventDate,
@@ -47,105 +48,109 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
   const infoOnly = isInfoOnly(slug);
 
   return (
-    <Section className="pt-32 lg:pt-40">
-      <Reveal>
-        <Link
-          href="/events"
-          className="inline-flex items-center gap-2 py-2 text-body-sm text-fg-muted transition-colors hover:text-fg"
-        >
-          <span aria-hidden="true">&larr;</span> All events
-        </Link>
-      </Reveal>
-
-      <div className="mt-8 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
-        <Reveal className="min-w-0">
-          {event.imageUrl ? (
-            <Image
-              src={event.imageUrl}
-              alt=""
-              width={1200}
-              height={1200}
-              priority
-              sizes="(min-width: 1024px) 44rem, 100vw"
-              className="w-full rounded-2xl border border-line"
-            />
-          ) : null}
-
-          <time
-            dateTime={toDateTimeAttr(event.startsAt)}
-            className="mt-10 block font-mono text-body-sm text-fg-subtle"
+    <>
+      <Section className="pt-32 lg:pt-40">
+        <Reveal>
+          <Link
+            href="/events"
+            className="inline-flex items-center gap-2 py-2 text-body-sm text-fg-muted transition-colors hover:text-fg"
           >
-            {formatEventDate(event.startsAt)}
-          </time>
+            <span aria-hidden="true">&larr;</span> All events
+          </Link>
+        </Reveal>
 
-          <h1 className="mt-4 text-h1 font-medium text-balance">
-            {event.title}
-          </h1>
-
-          {event.tagline ? (
-            <p className="mt-4 text-h3 text-fg-muted">{event.tagline}</p>
-          ) : null}
-
-          {event.description ? (
-            <p className="mt-8 max-w-2xl text-body-lg text-fg-muted text-pretty">
-              {event.description}
-            </p>
-          ) : null}
-
-          <dl className="mt-10 max-w-xl border-b border-line">
-            <Detail label="When">
-              {formatEventDate(event.startsAt)}, {formatEventTime(event.startsAt)}
-              {event.endsAt ? ` — ${formatEventTime(event.endsAt)}` : ""}
-            </Detail>
-            {event.location ? (
-              <Detail label="Where">{event.location}</Detail>
+        <div className="mt-8 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
+          <Reveal className="min-w-0">
+            {event.imageUrl ? (
+              <Image
+                src={event.imageUrl}
+                alt=""
+                width={1200}
+                height={1200}
+                priority
+                sizes="(min-width: 1024px) 44rem, 100vw"
+                className="w-full rounded-2xl border border-line"
+              />
             ) : null}
-            <Detail label="Cost">Free</Detail>
-          </dl>
-        </Reveal>
 
-        <Reveal delay={0.08} className="min-w-0 lg:sticky lg:top-24 lg:self-start">
-          {event.past ? (
-            <div className="rounded-2xl border border-dashed border-line p-8 text-center lg:p-10">
-              <p className="text-body-sm text-fg-muted text-pretty">
-                This one has already happened.{" "}
-                <Link
-                  href="/newsletter"
-                  className="text-fg underline underline-offset-4"
-                >
-                  Join the newsletter
-                </Link>{" "}
-                and you&rsquo;ll hear about the next one first.
+            <time
+              dateTime={toDateTimeAttr(event.startsAt)}
+              className="mt-10 block font-mono text-body-sm text-fg-subtle"
+            >
+              {formatEventDate(event.startsAt)}
+            </time>
+
+            <h1 className="mt-4 text-h1 font-medium text-balance">
+              {event.title}
+            </h1>
+
+            {event.tagline ? (
+              <p className="mt-4 text-h3 text-fg-muted">{event.tagline}</p>
+            ) : null}
+
+            {event.description ? (
+              <p className="mt-8 max-w-2xl text-body-lg text-fg-muted text-pretty">
+                {event.description}
               </p>
-            </div>
-          ) : infoOnly ? (
-            <div className="rounded-2xl border border-dashed border-line p-8 text-center lg:p-10">
-              <p className="text-body-sm text-fg-muted text-pretty">
-                This one runs without a signup — the details above are
-                everything you need.{" "}
-                <Link
-                  href="/newsletter"
-                  className="text-fg underline underline-offset-4"
-                >
-                  Join the newsletter
-                </Link>{" "}
-                to hear about the rest.
-              </p>
-            </div>
-          ) : registrationOpen ? (
-            <EventSignupForm eventId={event.id} eventTitle={event.title} />
-          ) : (
-            <div className="rounded-2xl border border-line bg-surface p-8 lg:p-10">
-              <h2 className="text-h3 font-medium">We&rsquo;re at capacity!</h2>
-              <p className="mt-3 text-body-sm text-fg-muted text-pretty">
-                {event.title} is capped at {capacityOf(slug)} people and
-                we&rsquo;ve hit that number. Thanks for the interest. Follow us
-                for the next one.
-              </p>
-            </div>
-          )}
-        </Reveal>
-      </div>
-    </Section>
+            ) : null}
+
+            <dl className="mt-10 max-w-xl border-b border-line">
+              <Detail label="When">
+                {formatEventDate(event.startsAt)}, {formatEventTime(event.startsAt)}
+                {event.endsAt ? ` — ${formatEventTime(event.endsAt)}` : ""}
+              </Detail>
+              {event.location ? (
+                <Detail label="Where">{event.location}</Detail>
+              ) : null}
+              <Detail label="Cost">Free</Detail>
+            </dl>
+          </Reveal>
+
+          <Reveal delay={0.08} className="min-w-0 lg:sticky lg:top-[calc(6rem+var(--topbar-h))] lg:self-start">
+            {event.past ? (
+              <div className="rounded-2xl border border-dashed border-line p-8 text-center lg:p-10">
+                <p className="text-body-sm text-fg-muted text-pretty">
+                  This one has already happened.{" "}
+                  <Link
+                    href="/newsletter"
+                    className="text-fg underline underline-offset-4"
+                  >
+                    Join the newsletter
+                  </Link>{" "}
+                  and you&rsquo;ll hear about the next one first.
+                </p>
+              </div>
+            ) : infoOnly ? (
+              <div className="rounded-2xl border border-dashed border-line p-8 text-center lg:p-10">
+                <p className="text-body-sm text-fg-muted text-pretty">
+                  This one runs without a signup — the details above are
+                  everything you need.{" "}
+                  <Link
+                    href="/newsletter"
+                    className="text-fg underline underline-offset-4"
+                  >
+                    Join the newsletter
+                  </Link>{" "}
+                  to hear about the rest.
+                </p>
+              </div>
+            ) : registrationOpen ? (
+              <EventSignupForm eventId={event.id} eventTitle={event.title} />
+            ) : (
+              <div className="rounded-2xl border border-line bg-surface p-8 lg:p-10">
+                <h2 className="text-h3 font-medium">We&rsquo;re at capacity!</h2>
+                <p className="mt-3 text-body-sm text-fg-muted text-pretty">
+                  {event.title} is capped at {capacityOf(slug)} people and
+                  we&rsquo;ve hit that number. Thanks for the interest. Follow us
+                  for the next one.
+                </p>
+              </div>
+            )}
+          </Reveal>
+        </div>
+      </Section>
+
+      <WaitlistCta />
+    </>
   );
 }

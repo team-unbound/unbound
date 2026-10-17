@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { WaitlistBar } from "@/components/waitlist/waitlist-bar";
 import { siteConfig } from "@/lib/site";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 import { ToastProvider } from "@/components/ui/toast";
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               >
                 Skip to content
               </a>
+              <WaitlistBar />
               <SiteHeader />
               <main id="main" className="flex flex-1 flex-col">
                 {children}

@@ -1,4 +1,9 @@
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
+import type {
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 
 const controlClass =
   "w-full rounded-lg border border-line bg-surface px-4 py-3 text-body text-fg placeholder:text-fg-subtle transition-colors hover:border-line-strong focus:border-fg focus:outline-none disabled:opacity-50 aria-[invalid=true]:border-fg-muted";
@@ -69,12 +74,30 @@ export function TextArea({
   );
 }
 
+export function SelectInput({
+  invalid,
+  className = "",
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
+  return (
+    <select
+      {...props}
+      aria-invalid={invalid || undefined}
+      aria-describedby={invalid ? `${props.id}-error` : undefined}
+      className={`${controlClass} ${className}`}
+    />
+  );
+}
+
 export function SubmitButton({
   pending,
+  pendingLabel = "Working…",
   children,
   className = "",
 }: {
   pending: boolean;
+  /** What the button reads while pending. */
+  pendingLabel?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
@@ -84,7 +107,7 @@ export function SubmitButton({
       disabled={pending}
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
-      {pending ? "Working…" : children}
+      {pending ? pendingLabel : children}
     </button>
   );
 }

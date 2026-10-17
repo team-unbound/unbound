@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/hero";
 import { CardGrid } from "@/components/ui/card-grid";
 import { Reveal } from "@/components/ui/reveal";
 import { Section, SectionHeading } from "@/components/ui/section";
+import { WaitlistCta } from "@/components/waitlist/waitlist-cta";
 
 const pillars = [
   {
@@ -67,6 +68,8 @@ export default function HomePage() {
           ))}
         </CardGrid>
       </Section>
+
+      <WaitlistCta />
 
       <Section className="border-t border-line">
         <Reveal>

@@ -20,4 +20,5 @@ export const navLinks = [
   { href: "/events", label: "Events" },
   { href: "/team", label: "Team" },
   { href: "/newsletter", label: "Newsletter" },
+  { href: "/waitlist", label: "Waitlist" },
 ] as const;

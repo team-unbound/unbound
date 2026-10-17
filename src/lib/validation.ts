@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PHONE_TYPES, WAITLIST_MAX } from "./waitlist";
 
 /** Shared input contracts. Every mutation parses through one of these. */
 
@@ -91,6 +92,24 @@ export const eventSignupSchema = z.object({
    */
   committed: z.literal(true, "Please confirm you're planning to show up."),
 });
+
+/**
+ * App waitlist. Anonymous. The email is trimmed and otherwise kept exactly as
+ * typed: waitlist emails are case-sensitive, unlike the newsletter's.
+ */
+export const waitlistSchema = z.object({
+  email: z.string().trim().max(WAITLIST_MAX.email).pipe(z.email()),
+  fullName: z.string().trim().min(1).max(WAITLIST_MAX.fullName),
+  roleText: optionalText(WAITLIST_MAX.roleText),
+  building: optionalText(WAITLIST_MAX.building),
+  city: optionalText(WAITLIST_MAX.city),
+  school: optionalText(WAITLIST_MAX.school),
+  heardFrom: optionalText(WAITLIST_MAX.heardFrom),
+  phoneType: z.enum(PHONE_TYPES).optional(),
+  is17Plus: z.boolean(),
+});
+
+export type WaitlistInput = z.infer<typeof waitlistSchema>;
 
 export const pairingResponseSchema = z.object({
   requestId: z.uuid(),

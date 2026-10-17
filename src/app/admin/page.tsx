@@ -4,6 +4,7 @@ import { Section } from "@/components/ui/section";
 import { getAdminTables } from "@/db/admin";
 import { requireAdmin } from "@/lib/auth";
 import { formatEventDate } from "@/lib/format";
+import { PHONE_LABELS, WAITLIST_LABELS } from "@/lib/waitlist";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -17,20 +18,26 @@ function Table({
   title,
   count,
   headers,
+  action,
   children,
 }: {
   title: string;
   count: number;
   headers: string[];
+  /** Rendered beside the count, e.g. an export link. */
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section className="mt-16">
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="text-h2 font-medium">{title}</h2>
-        <span className="font-mono text-body-sm text-fg-subtle">
-          {String(count).padStart(3, "0")}
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-body-sm text-fg-subtle">
+            {String(count).padStart(3, "0")}
+          </span>
+          {action}
+        </div>
       </div>
 
       {count > 0 ? (
@@ -70,7 +77,8 @@ function Yes({ value }: { value: boolean }) {
 export default async function AdminPage() {
   // Gated twice on purpose: here, and inside getAdminTables.
   await requireAdmin();
-  const { members, subscribers, events, requests } = await getAdminTables();
+  const { members, subscribers, events, requests, waitlist, waitlistTotal } =
+    await getAdminTables();
 
   return (
     <Section className="pt-40 lg:pt-48">
@@ -150,6 +158,52 @@ export default async function AdminPage() {
             <td className={cell}>
               {request.respondedAt ? formatEventDate(request.respondedAt) : "—"}
             </td>
+          </tr>
+        ))}
+      </Table>
+
+      <Table
+        title="Waitlist"
+        count={waitlistTotal}
+        headers={[
+          WAITLIST_LABELS.email,
+          WAITLIST_LABELS.fullName,
+          WAITLIST_LABELS.roleText,
+          WAITLIST_LABELS.building,
+          WAITLIST_LABELS.city,
+          WAITLIST_LABELS.school,
+          WAITLIST_LABELS.heardFrom,
+          WAITLIST_LABELS.phoneType,
+          WAITLIST_LABELS.is17Plus,
+          WAITLIST_LABELS.createdAt,
+        ]}
+        action={
+          // A plain link, not next/link: it downloads a file, not a page.
+          <a
+            href="/admin/waitlist/export"
+            download
+            className="rounded-full border border-line-strong px-5 py-2 text-body-sm font-medium transition-colors hover:border-fg"
+          >
+            Export CSV
+          </a>
+        }
+      >
+        {waitlist.map((signup) => (
+          <tr key={signup.id}>
+            <td className={`${cell} text-fg`}>{signup.email}</td>
+            <td className={`${cell} text-fg`}>{signup.fullName}</td>
+            <td className={cell}>{signup.roleText ?? "—"}</td>
+            <td className={`${cell} max-w-md`}>{signup.building ?? "—"}</td>
+            <td className={cell}>{signup.city ?? "—"}</td>
+            <td className={cell}>{signup.school ?? "—"}</td>
+            <td className={`${cell} max-w-md`}>{signup.heardFrom ?? "—"}</td>
+            <td className={cell}>
+              {signup.phoneType ? PHONE_LABELS[signup.phoneType] : "—"}
+            </td>
+            <td className={cell}>
+              <Yes value={signup.is17Plus} />
+            </td>
+            <td className={cell}>{formatEventDate(signup.createdAt)}</td>
           </tr>
         ))}
       </Table>
