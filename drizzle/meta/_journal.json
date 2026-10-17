@@ -15,6 +15,13 @@
       "when": 1788501297420,
       "tag": "0001_thin_stephen_strange",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792263161853,
+      "tag": "0002_waitlist_signups",
+      "breakpoints": true
     }
   ]
 }

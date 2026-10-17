@@ -192,6 +192,50 @@ export const pairingRequests = pgTable(
   ],
 );
 
+/* ------------------------------------------------------------------ */
+/* App waitlist                                                        */
+/*                                                                     */
+/* Anonymous like event signups: no Unbound account involved.          */
+/* ------------------------------------------------------------------ */
+
+export const phoneTypeEnum = pgEnum("phone_type", ["iphone", "android", "other"]);
+
+export const waitlistSignups = pgTable(
+  "waitlist_signups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /**
+     * Stored exactly as typed, minus surrounding whitespace. Case-sensitive on
+     * purpose: unlike the newsletter, Foo@x.com and foo@x.com are two signups.
+     */
+    email: text("email").notNull().unique(),
+    fullName: text("full_name").notNull(),
+    /** The "I am..." answer. */
+    roleText: text("role_text"),
+    building: text("building"),
+    city: text("city"),
+    school: text("school"),
+    heardFrom: text("heard_from"),
+    phoneType: phoneTypeEnum("phone_type"),
+    is17Plus: boolean("is_17_plus").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    // Mirrors the limits in waitlistSchema, so a write that skipped the parse
+    // still can't store an oversized value.
+    check("waitlist_signups_email_len", sql`char_length(${table.email}) <= 254`),
+    check("waitlist_signups_full_name_len", sql`char_length(${table.fullName}) <= 100`),
+    check("waitlist_signups_role_text_len", sql`char_length(${table.roleText}) <= 100`),
+    check("waitlist_signups_building_len", sql`char_length(${table.building}) <= 500`),
+    check("waitlist_signups_city_len", sql`char_length(${table.city}) <= 100`),
+    check("waitlist_signups_school_len", sql`char_length(${table.school}) <= 150`),
+    check("waitlist_signups_heard_from_len", sql`char_length(${table.heardFrom}) <= 300`),
+    index("waitlist_signups_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
@@ -200,3 +244,5 @@ export type EventSignup = typeof eventSignups.$inferSelect;
 export type NewEventSignup = typeof eventSignups.$inferInsert;
 export type PairingRequest = typeof pairingRequests.$inferSelect;
 export type PairingStatus = (typeof pairingStatusEnum.enumValues)[number];
+export type WaitlistSignup = typeof waitlistSignups.$inferSelect;
+export type PhoneType = (typeof phoneTypeEnum.enumValues)[number];

@@ -51,7 +51,8 @@ export function SiteHeader() {
           bar's translucent one, or the hero headline reads straight through
           the links. The collapsed bar keeps the translucent treatment. */}
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        // Sits below the waitlist bar, which sets --topbar-h when it's shown.
+        className={`fixed inset-x-0 top-(--topbar-h) z-50 transition-colors duration-300 ${
           open
             ? "border-b border-line bg-canvas"
             : scrolled

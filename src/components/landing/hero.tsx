@@ -9,11 +9,12 @@ import Link from "next/link";
  * min-h rather than a fixed height: the section fills the first screen, but a
  * long headline on a short phone grows it instead of overflowing. svh is the
  * address-bar-visible viewport, so "the first screen" means the same thing
- * whether or not mobile browser chrome is showing.
+ * whether or not mobile browser chrome is showing. The waitlist bar's height
+ * comes off the top so the section still ends at the fold.
  */
 export function Hero() {
   return (
-    <section className="flex min-h-[100svh] flex-col items-center justify-center pb-24 pt-32 sm:pb-32 sm:pt-36">
+    <section className="flex min-h-[calc(100svh-var(--topbar-h))] flex-col items-center justify-center pb-24 pt-32 sm:pb-32 sm:pt-36">
       <div className="shell flex flex-col items-center text-center">
         <span className="eyebrow">For ambitious builders</span>
 
@@ -34,6 +35,12 @@ export function Hero() {
             className="rounded-full bg-fg px-7 py-3 text-body-sm font-medium text-canvas transition-opacity hover:opacity-85"
           >
             Join the community
+          </Link>
+          <Link
+            href="/waitlist"
+            className="rounded-full border border-line-strong px-7 py-3 text-body-sm font-medium text-fg transition-colors hover:border-fg"
+          >
+            Join the waitlist
           </Link>
           <Link
             href="/about"

@@ -48,6 +48,13 @@ const pairingLimiter = make(10, "1 h", "pairing");
 const pairingRespondLimiter = make(60, "1 h", "pairing-respond");
 /** Per-user: onboarding + profile writes. */
 const profileLimiter = make(20, "1 h", "profile");
+/**
+ * Waitlist, whole form: one shared key. Deliberately not IP-keyed — at an
+ * event, a room full of real people signs up from the same address.
+ */
+const waitlistGlobalLimiter = make(60, "1 m", "waitlist-global");
+/** Waitlist, per email: keyed on the trimmed, lowercased address. */
+const waitlistEmailLimiter = make(5, "1 h", "waitlist-email");
 
 const limiters = {
   newsletter: newsletterLimiter,
@@ -55,6 +62,8 @@ const limiters = {
   pairing: pairingLimiter,
   pairingRespond: pairingRespondLimiter,
   profile: profileLimiter,
+  waitlistGlobal: waitlistGlobalLimiter,
+  waitlistEmail: waitlistEmailLimiter,
 } as const;
 
 export type LimiterName = keyof typeof limiters;

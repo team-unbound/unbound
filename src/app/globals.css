@@ -77,6 +77,28 @@
 
   /* ---- Motion ---- */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Waitlist top bar: the track holds two identical halves, so sliding it by
+     exactly one half loops without a visible seam. */
+  --animate-marquee: marquee 60s linear infinite;
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+/* Height of the waitlist top bar, or zero on the pages that hide it. The
+   fixed header and anything else measured from the top of the viewport add
+   this, so nothing ends up under the bar. */
+:root {
+  --topbar-h: 0px;
+}
+:root:has([data-waitlist-bar]) {
+  --topbar-h: 2.25rem;
 }
 
 @layer base {

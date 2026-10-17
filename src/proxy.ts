@@ -14,6 +14,8 @@ const isPublicRoute = createRouteMatcher([
   // not require an Unbound account.
   "/events(.*)",
   "/newsletter",
+  "/waitlist",
+  "/api/waitlist",
   "/community",
   "/privacy",
   "/terms",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/ui/reveal";
 import { Section, SectionHeading } from "@/components/ui/section";
+import { WaitlistCta } from "@/components/waitlist/waitlist-cta";
 import { siteConfig } from "@/lib/site";
 import { CopyEmailButton } from "@/components/ui/copy-email-button";
 import {
@@ -201,6 +202,8 @@ export default function AboutPage() {
           </Reveal>
         </div>
       </Section>
+
+      <WaitlistCta />
     </>
   );
 }
