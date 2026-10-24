@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "What Unbound collects, who can see it, and how to get it deleted.",
 };
 
-const UPDATED = "2026-09-04";
+const UPDATED = "2026-10-23";
 
 export default function PrivacyPage() {
   return (
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy"
       title="What we hold, and who can see it"
       updated={UPDATED}
-      intro="Unbound is a small community site run by three people. This page says exactly what we store, where it goes, and how to get rid of it. If something here is unclear, ask us and we will fix the wording."
+      intro="Unbound is a small community site run by three people. This page says exactly what we store, where it goes, and how to get rid of it. If something here is unclear, ask us and we will fix the wording. This page covers the Unbound website and the Unbound app."
     >
       <Clause heading="Who runs this">
         <p>
@@ -50,6 +50,10 @@ export default function PrivacyPage() {
           session to your profile. When you change your email address in Clerk,
           we update our copy.
         </p>
+        <p>
+          The Unbound app also uses Clerk. In the app you can sign in with an
+          email code, or with your Apple or Google account.
+        </p>
       </Clause>
 
       <Clause heading="Your profile">
@@ -79,6 +83,56 @@ export default function PrivacyPage() {
         </p>
       </Clause>
 
+      <Clause heading="Device information">
+        <p>
+          The Unbound app uses an identifier for your device. On Android it is
+          the device&rsquo;s Android ID. On iPhone it is a random code the app
+          creates and keeps in the iPhone Keychain. Either one can survive
+          deleting and reinstalling the app. The app sends it to our server when
+          it checks your account.
+        </p>
+        <p>
+          We do not save it in our database as it is. Our server turns it into a
+          scrambled, one-way code using a secret key that only we hold, and we
+          keep only that code with your account. We use it for one thing:
+          limiting how many accounts can be made from a single device, so the
+          community stays real. We do not use it to follow you across other apps
+          or sites, and we do not sell it.
+        </p>
+      </Clause>
+
+      <Clause heading="The app and your posts">
+        <p>
+          The Unbound app stores more than this website does. On top of your
+          profile, that means your username, your date of birth, your pronouns,
+          a tagline, the avatar style you pick, what you say you are building,
+          the interests you choose, and any startups or experience you add. Your
+          date of birth is used to check that you are at least 17. It is stored
+          with your account and is never shown to other people.
+        </p>
+        <p>
+          It also stores everything you post: photos (up to six per post),
+          captions, text, tags, comments, likes, saves, and reports you file. We
+          count how many times each post is viewed and keep track of which
+          account viewed it.
+        </p>
+        <p>
+          Posts, comments and profiles are visible to other people using the
+          app, so do not post anything you would not put on a public web page.
+          The photos are stored with Vercel.
+        </p>
+      </Clause>
+
+      <Clause heading="Drafts on your phone">
+        <p>
+          While you write a post, the app keeps a draft on your phone: the text,
+          the tags, and copies of the photos you picked. It is not sent to us
+          until you tap Post. A draft expires 30 minutes after your last edit,
+          and the app clears it from your phone the next time you tap the plus
+          button. Each account on a phone has its own draft.
+        </p>
+      </Clause>
+
       <Clause heading="Pairing requests">
         <p>
           When you send a pairing request, we store who sent it, who received
@@ -99,8 +153,8 @@ export default function PrivacyPage() {
         <p>
           Signing up stores your email address and, if you give them, your first
           and last name. We use it to send the Unbound newsletter and nothing
-          else. We do not sell it, rent it, or hand it to anyone outside the
-          three of us.
+          else. We do not sell it, rent it, or hand it to anyone other than the
+          services listed below.
         </p>
         <p>
           One address means one subscription. Signing up again with an address
@@ -115,8 +169,20 @@ export default function PrivacyPage() {
           When you sign up for an event, we store your name, email, age, and
           grade/year, along with the fact that you confirmed you&rsquo;re
           committed to attending. We use this to plan the event and follow up
-          if details change. We don&rsquo;t share this with anyone outside
-          Unbound.
+          if details change. We don&rsquo;t share this with anyone other than
+          the services listed below.
+        </p>
+      </Clause>
+
+      <Clause heading="The app waitlist">
+        <p>
+          The waitlist form on this website collects your email address, your
+          full name, who you are, what you are building, your city, your school,
+          how you heard about us, your phone type, and whether you are 17 or
+          older. We use it to run the waitlist and plan the launch of the app.
+          It is stored in our database. We do not sell it, and we do not hand it
+          to anyone other than the services listed below. To be taken off the
+          list, email us and we will delete your entry.
         </p>
       </Clause>
 
@@ -127,17 +193,24 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Neon</strong> hosts the database holding profiles, pairing
-            requests, events, event signups, and newsletter signups.
+            requests, events, event signups, and newsletter signups. It also
+            holds waitlist signups, and the accounts, posts and other data of
+            the Unbound app.
           </li>
           <li>
             <strong>Vercel</strong> hosts and serves the site, and sees the
-            request metadata any web host sees, including your IP address.
+            request metadata any web host sees, including your IP address. It
+            also stores the photos people post in the Unbound app. This website
+            also uses Vercel Analytics to count visits to its pages.
           </li>
           <li>
             <strong>Upstash</strong> backs rate limiting. Your IP address is
             used as a counter key on the newsletter and event signup forms so
-            one connection cannot flood signups. It is a key in a short-lived counter, not a
-            record of your visit, and it is never joined to your profile.
+            one connection cannot flood signups. On the website forms, it is a
+            key in a short-lived counter, not a record of your visit, and it is
+            never joined to your profile. In the Unbound app the counter is
+            keyed to your account, or to your IP address when you are signed
+            out. The waitlist form uses your email address as a counter key.
           </li>
           <li>
             <strong>Sentry</strong> receives error reports when something
@@ -156,26 +229,36 @@ export default function PrivacyPage() {
         <p>
           Clerk sets cookies to keep you signed in. Those are the only cookies
           we deliberately set, and blocking them means you cannot stay signed
-          in. We run no advertising trackers, no analytics product, and no
-          third-party pixels. Our hosts may set cookies of their own for routing
-          or security.
+          in. We run no advertising trackers and no third-party pixels. The site
+          uses Vercel Analytics to count visits to its pages. According to
+          Vercel, it does this without cookies, using an anonymised hash of each
+          request. Our hosts may set cookies of their own for routing or
+          security.
         </p>
       </Clause>
 
       <Clause heading="Keeping and deleting your data">
         <p>
-          We keep your profile for as long as your account exists.{" "}
-          <strong>Deleting your account in Clerk deletes it here too.</strong>{" "}
-          Clerk tells us the moment you do, and we remove your profile row and
-          every pairing request you sent or received, including the reasons you
-          wrote and the ones written to you. It is a real delete, not a hidden
-          flag, and there is no copy kept behind it.
+          The first part of this section describes the website. The last
+          paragraph describes the Unbound app.
         </p>
         <p>
-          Newsletter signups are the exception. That list is keyed on an email
-          address and has no link to your account, because you can subscribe
-          without one, so deleting your account leaves your subscription alone.
-          Email us if you want off the list as well.
+          We keep your profile for as long as your account exists.{" "}
+          <strong>
+            Deleting your account in Clerk deletes your website profile here
+            too.
+          </strong>{" "}
+          Clerk tells us the moment you do, and we remove your profile row and
+          every pairing request you sent or received, including the reasons you
+          wrote and the ones written to you. On the website it is a real delete,
+          not a hidden flag, and there is no copy kept behind it.
+        </p>
+        <p>
+          Newsletter and waitlist signups are the exception. Those lists are
+          keyed on an email address and have no link to your account, because
+          you can sign up without one, so deleting your account leaves your
+          subscription or waitlist entry alone. Email us if you want off those
+          lists as well.
         </p>
         <p>
           You can also just ask. If you would rather we deleted your profile
@@ -187,13 +270,22 @@ export default function PrivacyPage() {
           accepted pairing request is in someone else&rsquo;s hands, and
           deleting your account does not reach it.
         </p>
+        <p>
+          The Unbound app works differently for now: deleting a post or a
+          comment hides it from other people in the app, but we keep it on our
+          servers with no set deletion date. The app has no delete-account
+          button yet. To have your app data removed, email us and we will delete
+          it.
+        </p>
       </Clause>
 
       <Clause heading="Age, and what we have not built">
         <p>
           Unbound is aimed at high school and university students, so we expect
-          many members to be under 18. We do not ask for your date of birth and
-          we have no way to verify anyone&rsquo;s age. If you are under the age
+          many members to be under 18. The website does not ask for your date of
+          birth. The Unbound app does, and it will not let anyone under 17 sign
+          up. We have no way to verify anyone&rsquo;s age, so that check relies
+          on the date a person enters. If you are under the age
           at which you can agree to this on your own where you live, read it
           with a parent or guardian.
         </p>
@@ -204,13 +296,14 @@ export default function PrivacyPage() {
             or any other privacy regime, and we are not claiming compliance with
             any of them.
           </strong>{" "}
-          There is no age gate, no parental consent flow, no cookie consent
-          banner, and no data export tool. Deleting your account does now erase
-          your profile automatically, but everything else here runs on people
-          rather than tooling. What we do have is a small amount of data, a
-          short list of processors, and an email address a real person reads. If
-          you are a parent, guardian, or member who wants something removed,
-          write to us and we will remove it.
+          The website has no age gate (the app has the 17 minimum described
+          above), and there is no parental consent flow, no cookie consent
+          banner, and no data export tool. On the website, deleting your account
+          does now erase your profile automatically, but everything else here
+          runs on people rather than tooling. What we do have is a short list of
+          processors, and an email address a real person reads. If you are a
+          parent, guardian, or member who wants something removed, write to us
+          and we will remove it.
         </p>
       </Clause>
 
